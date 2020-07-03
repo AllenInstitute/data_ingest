@@ -1,0 +1,52 @@
+project_name,technique_name
+dong_antero,cre-dependent anterograde tracing
+dong_retro,retrograde tracing
+dong_trio,TRIO tracing
+ecker_sn_ATACseq,ATAC-seq
+ecker_sn_mCseq,mC-seq2
+ecker_sn_mCseq_retro,mC-seq2
+ecker_sn_mCseq_retro,retrograde tracing
+ecker_trio,retrograde transsynaptic tracing
+feng_sn_dropseq,Drop-seq
+huang_antero,anterograde tracing
+huang_retro,retrograde tracing
+huang_sn_10xv2,10x Chromium 3' v2 sequencing
+huang_sn_10xv3,10x Chromium 3' v3 sequencing
+huang_stpt_conn,anterograde tracing
+huang_stpt_count,STPT
+huang_pn_bulk_SSv4,SMART-seq v4
+huang_pn_sn_10xv2,10x Chromium 3' v2 sequencing
+kriegstein_sc_10x,10x Chromium 3' v2 sequencing
+kriegstein_sc_ATACseq,ATAC-seq
+kriegstein_sn_10x,10x Chromium 3' v2 sequencing
+lein_sn_10xv2,10x Chromium 3' v2 sequencing
+lein_sn_10xv3,10x Chromium 3' v3 sequencing
+lein_sn_SSv4,SMART-seq v4
+osten_stpt,STPT
+yang_MORF_confocal,MORF genetic sparse labeling
+zeng_anderson_sc_10xv2,10x Chromium 3' v2 sequencing
+zeng_expr_char,STPT
+zeng_fmost,fMOST
+zeng_fmost_cells,fMOST
+zeng_retro,retrograde transsynaptic tracing
+zeng_sc_10xv2,10x Chromium 3' v2 sequencing
+zeng_sc_10xv3,10x Chromium 3' v3 sequencing
+zeng_sc_SSv4,SMART-seq v4
+zeng_sc_SSv4_viral,SMART-seq v4
+zeng_sn_10xv2,10x Chromium 3' v2 sequencing
+zeng_sn_10xv3,10x Chromium 3' v3 sequencing
+zeng_sn_SSv4,SMART-seq v4
+zeng_mouselight,mouselight
+zhangK_cj_snareseq_R,SNARE-seq
+zhangK_cj_snareseq_R,RNAseq
+zhangK_cj_snareseq_AC,SNARE-seq
+zhangK_cj_snareseq_AC,ATAC-seq
+zhangK_hs_snareseq_R,SNARE-seq
+zhangK_hs_snareseq_R,RNAseq
+zhangK_hs_snareseq_AC,SNARE-seq
+zhangK_hs_snareseq_AC,ATAC-seq
+feng_fish,FISH
+zeng_zhuang_merfish,MERFISH
+zeng_tolias_pseq,Patch-seq
+huang_merfish,MERFISH
+zhangl_seqfish,seqFISH
