@@ -4,6 +4,7 @@ from owlready2 import *
 import rdflib
 from aiosdk.table_rdf import TableRdf
 import pandas as pd
+from ingest_lib import *
 
 INDEX_TO_FIRST_JOIN = 0
 INDEX_TO_SECOND_JOIN = 1
@@ -15,9 +16,16 @@ class GraphBuilder(object):
 		self.join_csv_files = join_csv_files
 		self.graph_folder_path = graph_folder_path
 
-		self.table_reader = TableRdf()
+		# self.table_reader = TableRdf()
+		self.ontology = owlready2.get_ontology('http://ontology.brain-map.org/aio_temp#')
 
-		self.build_graph()
+		# self.build_graph()
+		
+		# self.graph = self.table_reader.graph
+		self.graph = None
+
+	def define_ontology(self):
+		
 
 	def add_csv_files_to_graph(self):	
 		for csv_file in self.csv_files:
@@ -33,26 +41,23 @@ class GraphBuilder(object):
 		self.add_csv_files_to_graph()
 		self.add_joins_to_graph()
 
-	def get_filename_without_extension(self, filename):
-		return os.path.splitext(os.path.basename(filename))[0]
-
 	def get_join_keyword(self, csv_file):
 
 		if '_' not in csv_file:
 			raise Exception('Expected join csv file ' + str(csv_file) + ' to contain a underscore character but it did not')
 
-		join_parts = self.get_filename_without_extension(csv_file).split('_')
+		join_parts = IngestLib.get_filename_without_extension(csv_file).split('_')
 
 
 		return join_parts[INDEX_TO_FIRST_JOIN], join_parts[INDEX_TO_SECOND_JOIN]
 
 	def get_keyword(self, csv_file):
-		return '_' + self.get_filename_without_extension(csv_file)
+		return '_' + IngestLib.get_filename_without_extension(csv_file)
 
 	def write_out_graph(self, csv_file, keyword):
 		current_table_reader = TableRdf()
 
-		file_name = self.get_filename_without_extension(csv_file)
+		file_name = IngestLib.get_filename_without_extension(csv_file)
 
 		path = os.path.join(self.graph_folder_path, file_name + str('.ttl'))
 

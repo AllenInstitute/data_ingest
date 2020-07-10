@@ -1,8 +1,6 @@
 import os
 import json
 
-SETTINGS_FILE = './settings/settings.json'
-
 class IngestLib(object):
 	@staticmethod
 	def get_filename_without_extension(filename):
@@ -94,10 +92,6 @@ class IngestLib(object):
 		# print('results', results)
 
 		return results
-
-	@staticmethod
-	def get_settings():
-		return IngestLib.get_json_data_from_file(SETTINGS_FILE)
 
 	@staticmethod
 	def get_json_data_from_file(json_file):
