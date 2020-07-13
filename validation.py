@@ -38,23 +38,9 @@ class Validation(object):
 
 		tables = json_data['tables']
 
-		unique_keys = {}
-
 		for table in tables:
 			if 'table_name' not in table:
 				raise Exception('Expected json_file ' + str(json_file) + '  to contain a the field "table_name" for each table but it does not')
 
 			if 'values' not in table:
 				raise Exception('Expected json_file ' + str(json_file) + '  to contain a the field "values" for each table but it does not')
-
-			values = table['values']
-			for value in values:
-				if 'unique_key' not in value:
-					raise Exception('Expected json_file ' + str(json_file) + '  to contain a the field "unique_key" for each table but it does not')
-
-				unique_key = value['unique_key']
-
-				if unique_key in unique_keys:
-					raise Exception('Expected json_file ' + str(json_file) + '  to contain a unique_key for each value but found more than one instance of ' + str(unique_key))
-
-				unique_keys[unique_key] = True

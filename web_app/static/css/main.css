@@ -1,0 +1,15 @@
+#selected_link{
+    color: #1A68BE !important;
+}
+
+.header_th{
+	padding-right: 15px;
+	padding-left: 15px;
+}
+
+.menu_link{
+	text-decoration: none !important;
+	color: black !important;
+	font-size: 20;
+	font-family:  'Courier New', Courier, monospace;
+}

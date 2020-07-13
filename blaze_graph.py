@@ -6,12 +6,14 @@ from triples_holder import *
 
 INDEX_TO_FIRST = 0
 INDEX_TO_SECOND = 1
-EXPECTED_NUMBER_OF_LABEL_RESULTS = 1
+SINGLE_RESULT = 1
+LAST_ITEM = -1
 
 class BlazeGraph(object):
 	def __init__(self, settings):
 		self.blaze_graph_server = settings['blaze_graph_server']
 		self.ingest_prefixes = settings['ingest_prefixes']
+		self.ingest_prefix = settings['ingest_prefix']
 		self.subject_start = settings['subject_start']
 		self.server = self.connect_to_server()
 
@@ -26,27 +28,230 @@ class BlazeGraph(object):
 
 		return self.server.update(query)
 
+	def get_table_data(self, table_name):
+		query = ''
+		for prefix in self.ingest_prefixes:
+			query+=prefix
+
+		query+= 'SELECT ?subject '
+		query+= 'WHERE {' 
+		query+= '?subject '+ str(IngestLib.add_prefix(self.ingest_prefix, 'table_name')) + ' "' + str(table_name) + '" ;'
+		query+= '}'
+
+		# print(query)
+
+		query_results = self.run_sparql_query(query)
+
+		bindings = query_results['results']['bindings']
+
+
+		ingests = []
+
+		for binding in bindings:
+			
+			subject = binding['subject']['value']
+
+			ingests.append(self.find_all_by_subject(subject))
+
+		return ingests
+
+	def get_selected_data(self, triple_data, select_attributes):
+		selected = []
+
+		for triples in triple_data:
+			data = {}
+
+			for triple in triples:
+				# print('triple', triple)
+
+				attribute = self.get_attribute(triple.predicate)
+				if attribute in select_attributes:
+					data[self.get_attribute(triple.predicate)] = triple.object
+
+			selected.append(data)
+
+		# print('selected', selected)
+
+		return selected
+
+	def get_attribute(self, uri):
+		return uri.split('/')[LAST_ITEM]
+
+	def get_data_for_page(self, schema, table_name):
+		select_attributes = {}
+		for column_name in schema:
+			select_attributes[column_name] = True
+
+		table_data = self.get_table_data(table_name)
+
+		data = self.get_selected_data(table_data, select_attributes)
+
+		return data
+
 	#carefull with this one
 	def delete_all_data(self):
 		query = 'DELETE WHERE { ?s ?p ?o};'
 		self.run_sparql_update(query)
 
-	def add_or_update_attributes(self, unique_key, attributes):
-		triple_holder = TriplesHolder(self.subject_start, unique_key)
+	def add_or_update_attributes(self, unique_key, attributes, table_name):
+		triple_holder = TriplesHolder(self.subject_start, IngestLib.add_prefix(self.ingest_prefix, unique_key))
 		triple_holder.add_prefix(self.ingest_prefixes)
 
 		for predicate, object_value in attributes.items():
 			triple_holder.add_data(predicate, object_value)
 
 		triple_holder.add_data('rdf:label', triple_holder.subject)
+		triple_holder.add_data(IngestLib.add_prefix(self.ingest_prefix, 'uid'), unique_key)
+		triple_holder.add_data(IngestLib.add_prefix(self.ingest_prefix, 'table_name'), table_name)
 
 		query = self.build_insert_query(triple_holder)
 
+		return query
+
+	def insert_default_id_key(self, identifier):
+		query = ''
+
+		for prefix in self.ingest_prefixes:
+			query+=prefix
+
+		query+=' INSERT DATA { ' + IngestLib.add_prefix(self.ingest_prefix, 'id_key_count')
+		query+= ' ' + IngestLib.add_prefix(self.ingest_prefix, identifier)
+		query+= ' 0 .'
+		query+=' }'
+
+		# print('query insert', query)
+
+		self.run_sparql_update(query)
+
+	def increment_key(self, identifier, result):
+		query = ''
+
+		for prefix in self.ingest_prefixes:
+			query+=prefix
+
+		query+=' DELETE { ' + IngestLib.add_prefix(self.ingest_prefix, 'id_key_count') + ' ' + IngestLib.add_prefix(self.ingest_prefix, identifier) + ' ' + str(result) + ' . }'
+
+		increment_result = int(result)
+		increment_result+=1
+
+		query+=' INSERT { ' + IngestLib.add_prefix(self.ingest_prefix, 'id_key_count') + ' ' + IngestLib.add_prefix(self.ingest_prefix, identifier) + ' ' + str(increment_result) + ' .}'
+		query+=' WHERE { ' + IngestLib.add_prefix(self.ingest_prefix, 'id_key_count') + ' ' + IngestLib.add_prefix(self.ingest_prefix, identifier) + ' ' + str(result) + ' .}'
+
+		# print(query)
+		self.run_sparql_update(query)
+
+		return increment_result
+
+	def get_next_id(self, identifier):
+		query = ''
+		for prefix in self.ingest_prefixes:
+			query+=prefix
+
+		query+= ' '
+		query+= 'SELECT ?object '
+		query+= 'WHERE {' 
+		query+= IngestLib.add_prefix(self.ingest_prefix, 'id_key_count') + ' ' + IngestLib.add_prefix(self.ingest_prefix, identifier) + ' ?object .'
+		query+= ' }'
+
 		# print('query', query)
 
-		# self.run_sparql_update(query)
+		result = None
 
-		return query
+		query_results = self.run_sparql_query(query)
+
+		bindings = query_results['results']['bindings']
+		
+		if len(bindings) > SINGLE_RESULT:
+			raise Exception('Expected query to return a single result but it did not ' + str(query))
+		elif  len(bindings) == SINGLE_RESULT:
+			current_id = bindings[INDEX_TO_FIRST]['object']['value']
+
+			result = identifier + '_' + str(self.increment_key(identifier, current_id))
+
+		return result
+
+
+	def get_next_id_key(self, identifier):
+		id_key = self.get_next_id(identifier)
+
+		if id_key is None:
+			self.insert_default_id_key(identifier)
+			id_key = self.get_next_id(identifier)
+
+		return id_key
+
+
+
+	def find_distinct_objects_by_predicate(self, predicate_prefix, predicate):
+		results = []
+
+		query = ''
+		for prefix in self.ingest_prefixes:
+			query+=prefix
+
+		query+= 'SELECT distinct ?object '
+		query+= 'WHERE {' 
+		query+= '?subject ' + IngestLib.add_prefix(predicate_prefix, predicate) + ' ?object'
+		query+= '}'
+
+		# print('query', query)
+
+		query_results = self.run_sparql_query(query)
+
+		bindings = query_results['results']['bindings']
+		
+		for binding in bindings:
+			results.append(binding['object']['value'])
+
+		return results
+
+	def find_all_by_predicate(self, predicate_prefix, predicate):
+		triples = []
+
+		query = ''
+		for prefix in self.ingest_prefixes:
+			query+=prefix
+
+		query+= 'SELECT ?subject ?object '
+		query+= 'WHERE {' 
+		query+= '?subject ' + IngestLib.add_prefix(predicate_prefix, predicate) + ' ?object'
+		query+= '}'
+
+		# print('query', query)
+
+		query_results = self.run_sparql_query(query)
+
+		bindings = query_results['results']['bindings']
+
+		for binding in bindings:
+			triples.append(Triple(binding['subject']['value'], predicate, binding['object']['value']))
+
+		return triples
+
+	def find_all_by_subject(self, subject):
+		triples = []
+
+		query = ''
+		for prefix in self.ingest_prefixes:
+			query+=prefix
+
+		query+= 'SELECT ?predicate ?object '
+		query+= 'WHERE {' 
+		query+= '<' + subject + '> ?predicate ?object'
+		query+= '}'
+
+		# print('query', query)
+
+		query_results = self.run_sparql_query(query)
+
+		bindings = query_results['results']['bindings']
+		for binding in bindings:
+			# print('binding', binding)
+			triples.append(Triple(subject, binding['predicate']['value'], binding['object']['value']))
+
+			# print('triple', Triple(subject, binding['predicate']['value'], binding['object']['value']))
+		return triples
+
 
 	def find_by_label(self, label):
 		query = ''
@@ -66,7 +271,7 @@ class BlazeGraph(object):
 
 		subject = None
 
-		if len(bindings) != EXPECTED_NUMBER_OF_LABEL_RESULTS:
+		if len(bindings) != SINGLE_RESULT:
 			raise Exception('Expected query to return a single result but it did not ' + str(query))
 		else:
 			subject = bindings[INDEX_TO_FIRST]['subject']['value']
@@ -90,7 +295,7 @@ class BlazeGraph(object):
 
 		subject = None
 
-		if len(bindings) != EXPECTED_NUMBER_OF_LABEL_RESULTS:
+		if len(bindings) != SINGLE_RESULT:
 			raise Exception('Expected query to return a single result but it did not ' + str(query))
 		else:
 			object_value = bindings[INDEX_TO_FIRST]['object']['value']
@@ -108,6 +313,7 @@ class BlazeGraph(object):
 		query+= ' ' + second_triple.subject
 		query+= ' .'
 		query+=' };'
+
 
 		# self.run_sparql_update(query)
 
@@ -194,14 +400,8 @@ class BlazeGraph(object):
 
 			ControlledVocabValidation.validate_table(table_name, json_file, values, json_data_template, json_file_template)
 
-			for value in values:
-				attributes = {}
-
-				unique_key = value['unique_key']
-
-				#remove the unique_key and everything else is an attribute
-				attributes = value
-				del attributes['unique_key']
+			for attributes in values:
+				unique_key = self.get_next_id_key(table_name)
 
 				#add extra fields to attributes
 				if table_name in json_data_extra_fields:
@@ -211,7 +411,7 @@ class BlazeGraph(object):
 				for key, value in json_data_extra_global_fields.items():
 					attributes[key] = value
 
-				full_qeury+=self.add_or_update_attributes(unique_key, attributes)
+				full_qeury+=self.add_or_update_attributes(unique_key, attributes, table_name)
 
 		self.run_sparql_update(full_qeury)
 

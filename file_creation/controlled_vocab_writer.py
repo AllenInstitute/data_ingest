@@ -14,18 +14,6 @@ class ControlledVocabWriter(object):
 		self.ingest_prefix = ingest_prefix
 		self.row_ids = {}
 
-	def get_id(self, table_name):
-		if table_name not in self.row_ids:
-			self.row_ids[table_name] = 0
-		else:
-			self.row_ids[table_name] = self.row_ids[table_name] + 1
-
-		return self.row_ids[table_name]
-
-	def add_unique_key(self, table_name, row):
-		row['unique_key'] = 'di:' + str(table_name) + '_' + str(self.get_id(table_name))
-
-		return row
 
 	def get_uploaders(self):
 		table_name = 'uploaders'
@@ -39,8 +27,8 @@ class ControlledVocabWriter(object):
 		uploader_two[IngestLib.add_prefix(self.ingest_prefix,'role')] = 'Superadmin'
 
 		uploader_values = []
-		uploader_values.append(self.add_unique_key(table_name, uploader_one))
-		uploader_values.append(self.add_unique_key(table_name, uploader_two))
+		uploader_values.append(uploader_one)
+		uploader_values.append(uploader_two)
 
 		uploaders = {}
 		uploaders['table_name'] = table_name
@@ -50,7 +38,7 @@ class ControlledVocabWriter(object):
 
 
 	def get_ingestion_instances(self):
-		table_name = 'ingestion_instances'
+		table_name = 'ingestions'
 
 		ingestion_instance_one = {}
 		ingestion_instance_one['di:name'] = 'upload part 1'
@@ -71,9 +59,9 @@ class ControlledVocabWriter(object):
 		ingestion_instance_three['di:description'] = 'twiddly dee tweedle dum'
 
 		ingestion_instance_values = []
-		ingestion_instance_values.append(self.add_unique_key(table_name, ingestion_instance_one))
-		ingestion_instance_values.append(self.add_unique_key(table_name, ingestion_instance_two))
-		ingestion_instance_values.append(self.add_unique_key(table_name, ingestion_instance_three))
+		ingestion_instance_values.append(ingestion_instance_one)
+		ingestion_instance_values.append(ingestion_instance_two)
+		ingestion_instance_values.append(ingestion_instance_three)
 
 		ingestion_instances = {}
 		ingestion_instances['table_name'] = table_name
@@ -224,7 +212,7 @@ class ControlledVocabWriter(object):
 							instance[header[column_index]] = columns[column_index]
 
 
-						values.append(self.add_unique_key(table_name, instance))
+						values.append(instance)
 
 					line_number+=1
 
@@ -273,7 +261,7 @@ class ControlledVocabWriter(object):
 
 	def get_ingestion_instance_template(self):
 		ingestion_instance_template = {}
-		ingestion_instance_template['table_name'] = 'ingestion_instances'
+		ingestion_instance_template['table_name'] = 'ingestions'
 		ingestion_instance_template['required_fields'] = ['di:name', 'di:storage_directory', 'di:template', 'di:description']
 		ingestion_instance_template['required_files'] = ['di:template']
 
@@ -303,7 +291,7 @@ class ControlledVocabWriter(object):
 
 	def write_extra_fields_file(self, file_path):
 		extra_fields = {}
-		extra_fields['ingestion_instances'] = self.get_ingestion_instance_extra_fields()
+		extra_fields['ingestions'] = self.get_ingestion_instance_extra_fields()
 
 		with open(file_path, 'w') as outfile:
 			json.dump(extra_fields, outfile, indent=2)
