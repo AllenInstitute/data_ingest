@@ -5,12 +5,11 @@ class TriplesHolder(object):
 		self.subject = '<' + str(subject_start ) + str(subject) + '>'
 
 		self.triples = []
-
-		# self.predicates = []
-		# self.objects = []
 		self.prefixes = []
+		self.attributes = {}
 
 	def add_data(self, predicate, object_value):
+		self.attributes[predicate] = object_value
 		self.triples.append(Triple(self.subject, str(predicate), '"' + str(object_value) + '"'))
 
 		# self.predicates.append(str(predicate))
@@ -33,3 +32,11 @@ class TriplesHolder(object):
 	def is_last_index(self, i):
 		return ((i + 1) == self.number_of_triples())
 
+	def get_attribute(self, attribute):
+		if attribute not in self.attributes:
+			raise Exception('Could not find attribute of ' + str(attribute) + ' for ' + str(self.subject))
+
+		return self.attributes[attribute]
+
+	def get_uid(self):
+		return self.get_attribute('uid')

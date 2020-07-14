@@ -12,8 +12,6 @@ CONTROLLED_VOCAB = 'controlled_vocab.json'
 CONTROLLED_VOCAB_TEMPLATE = 'controlled_vocab_template.json'
 CONTROLLED_VOCAB_EXTRA_FIELDS = 'controlled_vocab_extra_fields.json'
 CONTROLLED_VOCAB_GLOBAL_EXTRA_FIELDS = 'controlled_vocab_global_extra_fields.json'
-TXT_FILES_PATH = './source/txt_files'
-TXT_JOIN_FILES_PATH = './source/txt_file_joins'
 
 from ingest_lib import *
 
@@ -23,7 +21,7 @@ def write_input_files(controlled_vocab, controlled_vocab_template, controlled_vo
 	settings = IngestLib.get_json_data_from_file(settings_file)
 
 	controlled_vocab_writer = ControlledVocabWriter(settings['ingest_prefix'])
-	controlled_vocab_writer.write_controlled_vocab(controlled_vocab, controlled_vocab_template, controlled_vocab_extra_fields, TXT_FILES_PATH, controlled_vocab_global_extra_fields, TXT_JOIN_FILES_PATH)
+	controlled_vocab_writer.write_controlled_vocab(controlled_vocab, controlled_vocab_template, controlled_vocab_extra_fields, controlled_vocab_global_extra_fields)
 
 	return settings
 
@@ -42,7 +40,7 @@ def main():
 	controlled_vocab_template = os.path.join(CONTROLLED_VOCABULARY_FOLDER, CONTROLLED_VOCAB_TEMPLATE)
 	controlled_vocab_extra_fields = os.path.join(CONTROLLED_VOCABULARY_FOLDER, CONTROLLED_VOCAB_EXTRA_FIELDS)
 	controlled_vocab_global_extra_fields = os.path.join(CONTROLLED_VOCABULARY_FOLDER, CONTROLLED_VOCAB_GLOBAL_EXTRA_FIELDS)
-	settings_file =  os.path.join(SETTINGS_FOLDER, SETTINGS_FILE)
+	settings_file = os.path.join(SETTINGS_FOLDER, SETTINGS_FILE)
 
 	settings = write_input_files(controlled_vocab, controlled_vocab_template, controlled_vocab_extra_fields, controlled_vocab_global_extra_fields, settings_file)
 

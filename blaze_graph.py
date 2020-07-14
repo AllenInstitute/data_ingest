@@ -3,11 +3,13 @@ import os
 from validation import *
 from controlled_vocab_validation import *
 from triples_holder import *
+from ingest_lib import *
 
 INDEX_TO_FIRST = 0
 INDEX_TO_SECOND = 1
 SINGLE_RESULT = 1
 LAST_ITEM = -1
+SINGLE_INCREMENT = 1
 
 class BlazeGraph(object):
 	def __init__(self, settings):
@@ -88,12 +90,26 @@ class BlazeGraph(object):
 
 		return data
 
+	def delete_all_data_by_ingest(self, ingest_uid):
+		query = ''
+
+		for prefix in self.ingest_prefixes:
+			query+=prefix
+
+		# query = 'DELETE WHERE { ?subject <' + str(self.subject_start) + 'ingest_id> "' + str(ingest_id) + '" . '
+		query += 'DELETE WHERE { ?subject ' + IngestLib.add_prefix(self.ingest_prefix, 'ingest_uid') + ' "' + str(ingest_uid) + '" . '
+		query += '?subject ?predicate ?object . }'
+
+		# print('query', query)
+
+		self.run_sparql_update(query)
+
 	#carefull with this one
 	def delete_all_data(self):
 		query = 'DELETE WHERE { ?s ?p ?o};'
 		self.run_sparql_update(query)
 
-	def add_or_update_attributes(self, unique_key, attributes, table_name):
+	def add_or_update_attributes(self, unique_key, attributes, table_name, ingest_triple=None):
 		triple_holder = TriplesHolder(self.subject_start, IngestLib.add_prefix(self.ingest_prefix, unique_key))
 		triple_holder.add_prefix(self.ingest_prefixes)
 
@@ -104,9 +120,46 @@ class BlazeGraph(object):
 		triple_holder.add_data(IngestLib.add_prefix(self.ingest_prefix, 'uid'), unique_key)
 		triple_holder.add_data(IngestLib.add_prefix(self.ingest_prefix, 'table_name'), table_name)
 
+		if ingest_triple is not None:
+			# print('ingest_triple.attributes', ingest_triple.attributes)
+			triple_holder.add_data(IngestLib.add_prefix(self.ingest_prefix, 'ingest_uid'), ingest_triple.attributes['uid'])
+
 		query = self.build_insert_query(triple_holder)
 
 		return query
+
+	def get_id_block(self, identifier, number_of_keys):
+		query = ''
+		for prefix in self.ingest_prefixes:
+			query+=prefix
+
+		query+= ' '
+		query+= 'SELECT ?object '
+		query+= 'WHERE {' 
+		query+= IngestLib.add_prefix(self.ingest_prefix, 'id_key_count') + ' ' + IngestLib.add_prefix(self.ingest_prefix, identifier) + ' ?object .'
+		query+= ' }'
+
+		# print('query', query)
+
+		result = None
+
+		query_results = self.run_sparql_query(query)
+
+		bindings = query_results['results']['bindings']
+		
+		if len(bindings) > SINGLE_RESULT:
+			raise Exception('Expected query to return a single result but it did not ' + str(query))
+		elif len(bindings) == SINGLE_RESULT:
+
+			result = int(bindings[INDEX_TO_FIRST]['object']['value'])
+			self.increment_key(identifier, result, number_of_keys)
+		else:
+			self.insert_default_id_key(identifier)
+			result = 0
+			self.increment_key(identifier, result, number_of_keys)
+
+		return result
+
 
 	def insert_default_id_key(self, identifier):
 		query = ''
@@ -123,7 +176,7 @@ class BlazeGraph(object):
 
 		self.run_sparql_update(query)
 
-	def increment_key(self, identifier, result):
+	def increment_key(self, identifier, result, increment):
 		query = ''
 
 		for prefix in self.ingest_prefixes:
@@ -132,7 +185,7 @@ class BlazeGraph(object):
 		query+=' DELETE { ' + IngestLib.add_prefix(self.ingest_prefix, 'id_key_count') + ' ' + IngestLib.add_prefix(self.ingest_prefix, identifier) + ' ' + str(result) + ' . }'
 
 		increment_result = int(result)
-		increment_result+=1
+		increment_result+=increment
 
 		query+=' INSERT { ' + IngestLib.add_prefix(self.ingest_prefix, 'id_key_count') + ' ' + IngestLib.add_prefix(self.ingest_prefix, identifier) + ' ' + str(increment_result) + ' .}'
 		query+=' WHERE { ' + IngestLib.add_prefix(self.ingest_prefix, 'id_key_count') + ' ' + IngestLib.add_prefix(self.ingest_prefix, identifier) + ' ' + str(result) + ' .}'
@@ -166,10 +219,18 @@ class BlazeGraph(object):
 		elif  len(bindings) == SINGLE_RESULT:
 			current_id = bindings[INDEX_TO_FIRST]['object']['value']
 
-			result = identifier + '_' + str(self.increment_key(identifier, current_id))
+			result = identifier + '_' + str(self.increment_key(identifier, current_id, SINGLE_INCREMENT))
 
 		return result
 
+	def get_next_id_keys(self, identifier, number_of_keys):
+		start = self.get_id_block(identifier, number_of_keys)
+		keys = []
+
+		for value in range(start, start + number_of_keys):
+			keys.append(identifier + '_' + str(value))
+
+		return keys
 
 	def get_next_id_key(self, identifier):
 		id_key = self.get_next_id(identifier)
@@ -180,6 +241,47 @@ class BlazeGraph(object):
 
 		return id_key
 
+	def find_by_uid(self, uid):
+		# print(IngestLib.add_prefix(self.ingest_prefix, 'uid') )
+
+		query = ''
+		for prefix in self.ingest_prefixes:
+			query+=prefix
+
+		query+= 'SELECT ?subject '
+		query+= 'WHERE {' 
+		query+= '?subject ' + IngestLib.add_prefix(self.ingest_prefix, 'uid') + ' "' + str(uid) + '"'
+		query+= '}'
+
+		# print('query', query)
+
+		query_results = self.run_sparql_query(query)
+
+		bindings = query_results['results']['bindings']
+
+		subject = None
+
+		if len(bindings) != SINGLE_RESULT:
+			raise Exception('Expected query to return a single result but it did not ' + str(query))
+		else:
+			subject = bindings[INDEX_TO_FIRST]['subject']['value']
+
+		return Triple(subject, IngestLib.add_prefix(self.ingest_prefix, 'uid'), str(uid))
+
+	def get_triple_holder(self, triples, subject, unique_key):
+		triple_holder = TriplesHolder(subject, IngestLib.add_prefix(self.ingest_prefix, unique_key))
+		for triple in triples:
+			triple_holder.add_data(self.get_attribute(triple.predicate), triple.object)
+
+		return triple_holder
+
+	def get_triples_from_uid(self, ingest_uid):
+
+		triple = self.find_by_uid(ingest_uid)
+
+		triples = self.find_all_by_subject(IngestLib.add_prefix(self.subject_start + self.ingest_prefix, triple.object))
+
+		return self.get_triple_holder(triples, triple.object, triple.object)
 
 
 	def find_distinct_objects_by_predicate(self, predicate_prefix, predicate):
@@ -278,15 +380,16 @@ class BlazeGraph(object):
 
 		return Triple(subject, 'rdf:label', subject)
 
-	def find_label_by_predicate_object(self, predicate, object_value):
+	def find_uid_by_predicate_object(self, predicate, object_value, table_name):
 		query = ''
 		for prefix in self.ingest_prefixes:
 			query+=prefix
 
-		query+= 'SELECT ?object '
+		query+= 'SELECT ?subject ?object '
 		query+= 'WHERE {' 
 		query+= '?subject ' + predicate + ' "' + object_value + '" . '
-		query+= '?subject rdf:label ?object'
+		query+= '?subject ' + IngestLib.add_prefix(self.ingest_prefix, 'table_name') + ' "' + table_name + '" . '
+		query+= '?subject ' + IngestLib.add_prefix(self.ingest_prefix, 'uid') + ' ?object'
 		query+= '}'
 
 		query_results = self.run_sparql_query(query)
@@ -299,8 +402,9 @@ class BlazeGraph(object):
 			raise Exception('Expected query to return a single result but it did not ' + str(query))
 		else:
 			object_value = bindings[INDEX_TO_FIRST]['object']['value']
+			subject = bindings[INDEX_TO_FIRST]['subject']['value']
 
-		return Triple(object_value, 'rdf:label', object_value)
+		return Triple(subject, IngestLib.add_prefix(self.ingest_prefix, 'uid'), object_value)
 
 	def insert_join(self, first_triple, second_triple):
 		query = ''
@@ -308,11 +412,11 @@ class BlazeGraph(object):
 		for prefix in self.ingest_prefixes:
 			query+=prefix
 
-		query+=' INSERT DATA { ' + first_triple.subject
+		query+=' INSERT DATA { <' + first_triple.subject + '>'
 		query+= ' rdf:has_part '
-		query+= ' ' + second_triple.subject
+		query+= ' <' + second_triple.subject + '>'
 		query+= ' .'
-		query+=' };'
+		query+=' }'
 
 
 		# self.run_sparql_update(query)
@@ -321,38 +425,42 @@ class BlazeGraph(object):
 
 
 
-	def add_controlled_vocab_joins(self, json_file, json_data):
-		print('adding joins...')
-		joins = json_data['joins']
-
+	def insert_join_data(self, values, table_one, table_two):
 		query = ''
 
-		for join in joins:
-			ControlledVocabValidation.validate_join(json_file, join)
-			# file_name = join['file_name']
-			table_one = join['table_one']
-			table_two = join['table_two']
-			values = join['values']
+		for value in values:
+
+			# print('value', value)
+
+			first_value = value[INDEX_TO_FIRST]
+			second_value = value[INDEX_TO_SECOND]
+
+			first_predicate = first_value[INDEX_TO_FIRST]
+			first_object = first_value[INDEX_TO_SECOND]
+
+			second_predicate = second_value[INDEX_TO_FIRST]
+			second_object = second_value[INDEX_TO_SECOND]
+
+			# print('table_one', table_one)
+			# print('first_predicate', first_predicate)
+			# print('first_object', first_object)
+
+			# print('table_two', table_two)
+			# print('second_predicate', second_predicate)
+			# print('second_object', second_object)
 
 
 
-			for value in values:
+			first_triple = self.find_uid_by_predicate_object(first_predicate, first_object, table_one)
+			second_triple = self.find_uid_by_predicate_object(second_predicate, second_object, table_two)
 
-				first_value = value[INDEX_TO_FIRST]
-				second_value = value[INDEX_TO_SECOND]
+			query = self.insert_join(first_triple, second_triple)
 
-				first_predicate = first_value[INDEX_TO_FIRST]
-				first_object = first_value[INDEX_TO_SECOND]
+			# print('query', query)
 
-				second_predicate = second_value[INDEX_TO_FIRST]
-				second_object = second_value[INDEX_TO_SECOND]
+			self.run_sparql_update(query)
 
-				first_triple = self.find_label_by_predicate_object(first_predicate, first_object)
-				second_triple = self.find_label_by_predicate_object(second_predicate, second_object)
-
-				query+= self.insert_join(first_triple, second_triple)
-
-		self.run_sparql_update(query)
+		# self.run_sparql_update(query)
 
 	def build_insert_query(self, triple_holder):
 		query = ''
@@ -376,6 +484,24 @@ class BlazeGraph(object):
 
 		return query
 
+	def insert_data(self, values, table_name, ingest_triple):
+
+		uid_keys = self.get_next_id_keys(table_name, len(values))
+
+		index = 0
+		query = ''
+		for attributes in values:
+			# unique_key = self.get_next_id_key(table_name)
+			unique_key = uid_keys[index]
+			attributes[IngestLib.add_prefix(self.ingest_prefix,'data_type')] = 'ingest_data'
+
+			# print('attributes', attributes)
+			
+			query+= self.add_or_update_attributes(unique_key, attributes, table_name, ingest_triple)
+			index+=1
+
+		self.run_sparql_update(query)
+
 	def insert_controlled_vocab(self, json_file, json_file_template, json_file_extra_fields, json_file_extra_global_fields):
 		print('adding controlled vocabulary...')
 
@@ -393,15 +519,17 @@ class BlazeGraph(object):
 		full_qeury = ''
 
 		for table in tables:
-
-
 			table_name = table['table_name']
 			values = table['values']
 
 			ControlledVocabValidation.validate_table(table_name, json_file, values, json_data_template, json_file_template)
 
+			uid_keys = self.get_next_id_keys(table_name, len(values))
+
+			index = 0
 			for attributes in values:
-				unique_key = self.get_next_id_key(table_name)
+				# unique_key = self.get_next_id_key(table_name)
+				unique_key = uid_keys[index]
 
 				#add extra fields to attributes
 				if table_name in json_data_extra_fields:
@@ -413,9 +541,11 @@ class BlazeGraph(object):
 
 				full_qeury+=self.add_or_update_attributes(unique_key, attributes, table_name)
 
+				index+=1
+
 		self.run_sparql_update(full_qeury)
 
-		self.add_controlled_vocab_joins(json_file, json_data)
+		# self.add_controlled_vocab_joins(json_file, json_data)
 
 def main():
 	print("testing blaze graph")

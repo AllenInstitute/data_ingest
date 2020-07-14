@@ -1,6 +1,9 @@
 import os
 import json
 
+INDEX_TO_FIRST = 0
+INDEX_TO_SECOND = 1
+
 class IngestLib(object):
 	@staticmethod
 	def get_filename_without_extension(filename):
@@ -104,3 +107,25 @@ class IngestLib(object):
 			results = json.load(json_data)
 
 		return results
+
+	@staticmethod 
+	def create_template_validation(required, file_type, data_type, schema, ingest_prefix, file_name, join_tables):
+		schema = schema.split(',')
+
+		schema_with_prefix = []
+		for column_name in schema:
+			schema_with_prefix.append(IngestLib.add_prefix(ingest_prefix, column_name))
+
+		template_validation = {}
+		template_validation['required'] = required
+		template_validation['file_type'] = file_type
+		template_validation['data_type'] = data_type
+		template_validation['schema'] = schema_with_prefix
+		template_validation['file_name'] = file_name
+
+		if join_tables is not None:
+			template_validation['join_table_one'] = join_tables[INDEX_TO_FIRST]
+			template_validation['join_table_two'] = join_tables[INDEX_TO_SECOND]
+
+
+		return template_validation

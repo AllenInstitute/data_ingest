@@ -52,13 +52,6 @@ class ControlledVocabValidation(object):
 		return validations
 
 	@staticmethod
-	def validate_join(json_file, value):
-		ControlledVocabValidation.has_join_field(json_file, value, 'file_name')
-		ControlledVocabValidation.has_join_field(json_file, value, 'table_one')
-		ControlledVocabValidation.has_join_field(json_file, value, 'table_two')
-		ControlledVocabValidation.has_join_field(json_file, value, 'values')
-
-	@staticmethod
 	def validate_extra_fields(json_data, json_file, json_data_extra_fields, json_file_extra_fields):
 
 		if 'tables' not in json_data:
