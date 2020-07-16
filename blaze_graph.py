@@ -109,7 +109,7 @@ class BlazeGraph(object):
 		query = 'DELETE WHERE { ?s ?p ?o};'
 		self.run_sparql_update(query)
 
-	def add_or_update_attributes(self, unique_key, attributes, table_name, ingest_triple=None):
+	def add_or_update_attributes(self, unique_key, attributes, table_name, fast_query, ingest_triple=None):
 		triple_holder = TriplesHolder(self.subject_start, IngestLib.add_prefix(self.ingest_prefix, unique_key))
 		triple_holder.add_prefix(self.ingest_prefixes)
 
@@ -125,6 +125,11 @@ class BlazeGraph(object):
 			triple_holder.add_data(IngestLib.add_prefix(self.ingest_prefix, 'ingest_uid'), ingest_triple.attributes['uid'])
 
 		query = self.build_insert_query(triple_holder)
+
+		
+		if not fast_query:
+			print('query', query)
+			self.run_sparql_update(query)
 
 		return query
 
@@ -488,6 +493,11 @@ class BlazeGraph(object):
 
 		uid_keys = self.get_next_id_keys(table_name, len(values))
 
+		fast_query = True
+
+		# if table_name == 'project':
+		# 	fast_query = False
+
 		index = 0
 		query = ''
 		for attributes in values:
@@ -497,10 +507,11 @@ class BlazeGraph(object):
 
 			# print('attributes', attributes)
 			
-			query+= self.add_or_update_attributes(unique_key, attributes, table_name, ingest_triple)
+			query+= self.add_or_update_attributes(unique_key, attributes, table_name, fast_query, ingest_triple)
 			index+=1
 
-		self.run_sparql_update(query)
+		if fast_query:
+			self.run_sparql_update(query)
 
 	def insert_controlled_vocab(self, json_file, json_file_template, json_file_extra_fields, json_file_extra_global_fields):
 		print('adding controlled vocabulary...')
@@ -539,7 +550,7 @@ class BlazeGraph(object):
 				for key, value in json_data_extra_global_fields.items():
 					attributes[key] = value
 
-				full_qeury+=self.add_or_update_attributes(unique_key, attributes, table_name)
+				full_qeury+=self.add_or_update_attributes(unique_key, attributes, table_name, False)
 
 				index+=1
 

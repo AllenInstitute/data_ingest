@@ -1,5 +1,6 @@
 import os
 import json
+import hashlib
 
 INDEX_TO_FIRST = 0
 INDEX_TO_SECOND = 1
@@ -108,24 +109,31 @@ class IngestLib(object):
 
 		return results
 
-	@staticmethod 
-	def create_template_validation(required, file_type, data_type, schema, ingest_prefix, file_name, join_tables):
-		schema = schema.split(',')
+	@staticmethod
+	def get_md5(file_name):
+		hash_md5 = hashlib.md5()
+		with open(file_name, "rb") as f:
+			for chunk in iter(lambda: f.read(4096), b""):
+				hash_md5.update(chunk)
+		return hash_md5.hexdigest()
 
-		schema_with_prefix = []
-		for column_name in schema:
-			schema_with_prefix.append(IngestLib.add_prefix(ingest_prefix, column_name))
+	@staticmethod 
+	def create_template_validation(required, file_type, data_type, ingest_prefix, file_name):
+		# schema_with_prefix = []
+		# for column_name in schema:
+		# 	schema_with_prefix.append(IngestLib.add_prefix(ingest_prefix, column_name))
 
 		template_validation = {}
 		template_validation['required'] = required
 		template_validation['file_type'] = file_type
 		template_validation['data_type'] = data_type
-		template_validation['schema'] = schema_with_prefix
 		template_validation['file_name'] = file_name
 
-		if join_tables is not None:
-			template_validation['join_table_one'] = join_tables[INDEX_TO_FIRST]
-			template_validation['join_table_two'] = join_tables[INDEX_TO_SECOND]
+		if data_type == 'join':
+			table_names = IngestLib.get_filename_without_extension(file_name).split('_')
+
+			template_validation['join_table_one'] = table_names[INDEX_TO_FIRST]
+			template_validation['join_table_two'] = table_names[INDEX_TO_SECOND]
 
 
 		return template_validation

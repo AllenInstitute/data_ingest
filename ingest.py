@@ -5,6 +5,9 @@ import shutil
 import glob
 import os
 from datetime import datetime
+import pandas as pd
+import math
+import numpy as np
 
 SETTINGS_FOLDER = './settings'
 SETTINGS_FILE = 'settings.json'
@@ -45,13 +48,14 @@ class Ingest(object):
 			folder_name = os.path.basename(os.path.splitext(self.zip_file)[0])
 
 			unzipped_file_path = os.path.join(self.storage_directory, folder_name)
+			if os.path.isdir(unzipped_file_path):
 
-			for file in glob.glob(unzipped_file_path + '/*'):
-				correct_location = os.path.join(self.storage_directory, os.path.basename(file))
-				shutil.copyfile(file,  correct_location)
-				os.remove(file)
+				for file in glob.glob(unzipped_file_path + '/*'):
+					correct_location = os.path.join(self.storage_directory, os.path.basename(file))
+					shutil.copyfile(file,  correct_location)
+					os.remove(file)
 
-			os.rmdir(unzipped_file_path)
+				os.rmdir(unzipped_file_path)
 
 	def store_data(self):
 		self.validation.validate_file_existance(self.storage_directory, self.template)
@@ -60,8 +64,8 @@ class Ingest(object):
 		self.blaze_graph.delete_all_data_by_ingest(self.ingest_triple.get_uid())
 
 		self.insert_file_records(self.storage_directory, self.template)
-		# self.insert_data(self.storage_directory, self.template)
-		# self.insert_joins(self.storage_directory, self.template)
+		self.insert_data(self.storage_directory, self.template)
+		self.insert_joins(self.storage_directory, self.template)
 
 		#create a file record for each file
 
@@ -83,12 +87,14 @@ class Ingest(object):
 			instance[IngestLib.add_prefix(self.ingest_prefix,'required')] = file['required']
 			instance[IngestLib.add_prefix(self.ingest_prefix,'file_type')] = file['file_type']
 			instance[IngestLib.add_prefix(self.ingest_prefix,'data_type')] = file['data_type']
-			instance[IngestLib.add_prefix(self.ingest_prefix,'schema')] = file['schema']
 			instance[IngestLib.add_prefix(self.ingest_prefix,'file_name')] = file['file_name']
 			instance[IngestLib.add_prefix(self.ingest_prefix,'storage_directory')] = storage_directory
 			instance[IngestLib.add_prefix(self.ingest_prefix,'file_path')] = file_path
 			instance[IngestLib.add_prefix(self.ingest_prefix,'exists')] = os.path.exists(file_path)
 			instance[IngestLib.add_prefix(self.ingest_prefix,'created_at')] = datetime.now()
+			instance[IngestLib.add_prefix(self.ingest_prefix,'size_in_bytes')] = os.path.getsize(file_path)
+			instance[IngestLib.add_prefix(self.ingest_prefix,'md5sum')] = IngestLib.get_md5(file_path)
+			
 			instance['rdf:has_part'] = self.ingest_triple.subject
 
 
@@ -106,16 +112,15 @@ class Ingest(object):
 			required = file['required']
 			file_type = file['file_type']
 			data_type = file['data_type']
-			schema = file['schema']
 			file_name = file['file_name']
 
 			file_path = os.path.join(storage_directory, file_name)
 
 			if data_type == 'data':
-				if file_type == 'csv_txt':
+				if file_type == 'csv':
 					print('inserting', file_name)
 
-					values, table_name = self.get_txt_csv_data(file_path, schema)
+					values, table_name = self.get_csv_data(file_path)
 					self.blaze_graph.insert_data(values, table_name, self.ingest_triple)
 
 				else:
@@ -130,7 +135,6 @@ class Ingest(object):
 			required = file['required']
 			file_type = file['file_type']
 			data_type = file['data_type']
-			schema = file['schema']
 			file_name = file['file_name']
 
 			file_path = os.path.join(storage_directory, file_name)
@@ -139,10 +143,10 @@ class Ingest(object):
 				join_table_one = file['join_table_one']
 				join_table_two = file['join_table_two']
 
-				if file_type == 'csv_txt':
+				if file_type == 'csv':
 					print('inserting', file_name)
 
-					values = self.add_txt_joins_data(file_path, schema)
+					values = self.add_csv_joins_data(file_path)
 
 					self.blaze_graph.insert_join_data(values, join_table_one, join_table_two)
 
@@ -150,64 +154,122 @@ class Ingest(object):
 					raise Exception('file_type', str(file_type), ' not supported')
 
 
-	def get_txt_csv_data(self, txt_file, schema):
+	def get_csv_data(self, csv_file):
 		values = []
-		table_name = IngestLib.get_filename_without_extension(os.path.basename(txt_file))
+		table_name = IngestLib.get_filename_without_extension(os.path.basename(csv_file))
 
-		with open(txt_file, 'r') as input_file:
-			input_lines = input_file.readlines()
+		df = pd.read_csv(csv_file, header = 0, encoding='ISO-8859-1')
+		# df = pd.read_csv(csv_file, header = 0, encoding='ascii')
+		# df = pd.read_csv(csv_file, header = 0, encoding='utf-8')
+		# df = pd.read_csv(csv_file, header = 0, encoding='cp1252')
 
-			line_number = 1
+		# encoding = "cp1252"
+		# encoding = "ISO-8859-1"
+		schema = df.columns
 
-			for input_line in input_lines:
-				input_line = input_line.strip()
-				columns = IngestLib.parse_line(input_line, line_number, txt_file)
+		# print('schema', schema)
 
-				if len(input_line) > MIN_ROW_LENGTH:
-					if len(columns) != len(schema):
-						raise Exception('Expected length of the columns ' + str(len(columns)) + ' to be the same as schema length ' + str(len(schema)) + ' for ' + str(txt_file) + ' but it was not (line ' + str(line_number) + ')')
+		# with open(csv_file, 'r', encoding='ascii', errors='surrogateescape') as input_file:
+		for index, row in df.iterrows():
+			instance = {}
+			for column_name in schema:
+				# print(column_name, '-->', row[column_name])
+
+				# if (isinstance(row[column_name], float) and math.isnan(row[column_name])) or math.isnan(row[column_name]):
+				if row[column_name] is np.nan:
+					instance[IngestLib.add_prefix(self.ingest_prefix, column_name.strip())] = None
+				elif isinstance(row[column_name], float):
+					instance[IngestLib.add_prefix(self.ingest_prefix, column_name)] = row[column_name]
+				else:
+					instance[IngestLib.add_prefix(self.ingest_prefix, column_name)] = row[column_name].encode('utf-8', 'surrogateescape').decode('utf-8', 'replace')
+					# instance[IngestLib.add_prefix(self.ingest_prefix, column_name)] = row[column_name]
 
 
-					instance = {}
-					
-					for column_index in range(len(schema)):
-						instance[schema[column_index]] = columns[column_index]
+			values.append(instance)
+				
+
+		# 		print(column_name, '-->', row[column_name])
+
+		# 	print(index, row)
+		# 	print()
+
+		# with open(csv_file, 'r', encoding='utf-8', errors='surrogateescape') as input_file:
+		# 	input_lines = input_file.readlines()
+
+		# 	line_number = 1
+		# 	schema = None
+
+		# 	for input_line in input_lines:
+		# 		if line_number == 1:
+		# 			schema = input_line.split(',')
+		# 		else:
+		# 			input_line = input_line.strip()
+		# 			# columns = IngestLib.parse_line(input_line, line_number, csv_file)
+		# 			# columns = input_line.split(',')
+
+		# 			if len(input_line) > MIN_ROW_LENGTH:
+		# 				if len(columns) != len(schema):
+		# 					raise Exception('Expected length of the columns ' + str(len(columns)) + ' to be the same as schema length ' + str(len(schema)) + ' for ' + str(csv_file) + ' but it was not (line ' + str(line_number) + ')')
 
 
-					values.append(instance)
+		# 				instance = {}
+						
+		# 				for column_index in range(len(schema)):
+		# 					instance[IngestLib.add_prefix(self.ingest_prefix, schema[column_index].strip())] = columns[column_index].strip().encode('utf-8', 'surrogateescape').decode('utf-8', 'replace')
 
-				line_number+=1
+		# 				values.append(instance)
+
+		# 		line_number+=1
 
 		return values, table_name
 
-	def add_txt_joins_data(self, txt_file, schema):
+	def add_csv_joins_data(self, csv_file):
+		df = pd.read_csv(csv_file, header = 0, encoding='ISO-8859-1')
+		schema = df.columns
+
 		values = []
 
-		with open(txt_file, 'r') as input_file:
-			input_lines = input_file.readlines()
+		for index, row in df.iterrows():
+
+			instance = []
+			for column_name in schema:
+				instance.append([IngestLib.add_prefix(self.ingest_prefix, column_name), row[column_name].encode('utf-8', 'surrogateescape').decode('utf-8', 'replace')])
+
+			values.append(instance)
+
+		
+
+		# with open(txt_file, 'r', encoding='ascii', errors='surrogateescape') as input_file:
+		# 	input_lines = input_file.readlines()
 			
-			line_number = 1
+		# 	line_number = 1
+		# 	schema = None
 
-			for input_line in input_lines:
-				input_line = input_line.strip()
-				columns = IngestLib.parse_line(input_line, line_number, txt_file)
+		# 	for input_line in input_lines:
+		# 		if line_number == 1:
+		# 			schema = input_line.split(',')
+		# 		else:
 
-				if len(input_line) > MIN_ROW_LENGTH:
-					# print('************')
-					# print('columns', columns, len(columns))
-					# print('schema', schema, len(schema))
+		# 			input_line = input_line.strip()
+		# 			# columns = IngestLib.parse_line(input_line, line_number, txt_file)
+		# 			colunns = input_line.split(',')
 
-					instance = []
+		# 			if len(input_line) > MIN_ROW_LENGTH:
+		# 				# print('************')
+		# 				# print('columns', columns, len(columns))
+		# 				# print('schema', schema, len(schema))
+
+		# 				instance = []
 
 
-					if len(columns) != len(schema):
-						raise Exception('Expected length of the columns ' + str(len(columns)) + ' to be the same as schema length ' + str(len(schema)) + ' for ' + str(txt_file) + ' but it was not (line ' + str(line_number) + ')')
-					
-					for column_index in range(len(schema)):
-						instance.append([schema[column_index], columns[column_index]])
+		# 				if len(columns) != len(schema):
+		# 					raise Exception('Expected length of the columns ' + str(len(columns)) + ' to be the same as schema length ' + str(len(schema)) + ' for ' + str(txt_file) + ' but it was not (line ' + str(line_number) + ')')
+						
+		# 				for column_index in range(len(schema)):
+		# 					instance.append([schema[column_index].strip(), columns[column_index]].strip())
 
-					values.append(instance)
-				line_number+=1
+		# 				values.append(instance)
+		# 		line_number+=1
 
 			# instances = {}
 			# instances['file_name'] = txt_file
