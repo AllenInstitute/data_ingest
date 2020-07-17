@@ -1,0 +1,106 @@
+{
+  "files": [
+    {
+      "required": true,
+      "file_type": "csv",
+      "data_type": "data",
+      "file_name": "archive.csv"
+    },
+    {
+      "required": true,
+      "file_type": "csv",
+      "data_type": "data",
+      "file_name": "investigator.csv"
+    },
+    {
+      "required": true,
+      "file_type": "csv",
+      "data_type": "join",
+      "file_name": "project_archive.csv",
+      "join_table_one": "project",
+      "join_table_two": "archive"
+    },
+    {
+      "required": true,
+      "file_type": "csv",
+      "data_type": "join",
+      "file_name": "project_investigator.csv",
+      "join_table_one": "project",
+      "join_table_two": "investigator"
+    },
+    {
+      "required": true,
+      "file_type": "csv",
+      "data_type": "join",
+      "file_name": "project_protocol.csv",
+      "join_table_one": "project",
+      "join_table_two": "protocol"
+    },
+    {
+      "required": true,
+      "file_type": "csv",
+      "data_type": "data",
+      "file_name": "project_technique.csv"
+    },
+    {
+      "required": true,
+      "file_type": "csv",
+      "data_type": "data",
+      "file_name": "protocol.csv"
+    },
+    {
+      "required": true,
+      "file_type": "csv",
+      "data_type": "data",
+      "file_name": "technique.csv"
+    },
+    {
+      "required": true,
+      "file_type": "csv",
+      "data_type": "data",
+      "file_name": "grant.csv"
+    },
+    {
+      "required": true,
+      "file_type": "csv",
+      "data_type": "data",
+      "file_name": "modality.csv"
+    },
+    {
+      "required": true,
+      "file_type": "csv",
+      "data_type": "join",
+      "file_name": "project_grant.csv",
+      "join_table_one": "project",
+      "join_table_two": "grant"
+    },
+    {
+      "required": true,
+      "file_type": "csv",
+      "data_type": "join",
+      "file_name": "project_modality.csv",
+      "join_table_one": "project",
+      "join_table_two": "modality"
+    },
+    {
+      "required": true,
+      "file_type": "csv",
+      "data_type": "join",
+      "file_name": "project_species.csv",
+      "join_table_one": "project",
+      "join_table_two": "species"
+    },
+    {
+      "required": true,
+      "file_type": "csv",
+      "data_type": "data",
+      "file_name": "project.csv"
+    },
+    {
+      "required": true,
+      "file_type": "csv",
+      "data_type": "data",
+      "file_name": "species.csv"
+    }
+  ]
+}
