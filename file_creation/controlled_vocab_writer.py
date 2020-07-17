@@ -33,9 +33,19 @@ class ControlledVocabWriter(object):
 		uploader_three[IngestLib.add_prefix(self.ingest_prefix,'name')] = 'Jimmy Mathews'
 		uploader_three[IngestLib.add_prefix(self.ingest_prefix,'role')] = 'Superadmin'
 
+
+
 		uploader_values = []
 		uploader_values.append(uploader_one)
 		uploader_values.append(uploader_two)
+		uploader_values.append(uploader_three)
+
+		# tests = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't']
+		# for test in tests:
+		# 	uploader = {}
+		# 	uploader[IngestLib.add_prefix(self.ingest_prefix,'name')] = test
+		# 	uploader[IngestLib.add_prefix(self.ingest_prefix,'role')] = test
+		# 	uploader_values.append(uploader)
 
 		uploaders = {}
 		uploaders['table_name'] = table_name

@@ -13,3 +13,46 @@
 	font-size: 20;
 	font-family:  'Courier New', Courier, monospace;
 }
+
+.wf_th{
+	background: #1A68BE;
+	color: white;
+	padding: 8px;
+	font-family:  'Courier New', Courier, monospace;
+}
+
+#wf_table{
+	text-align: left;
+	border-collapse:  collapse;
+	width: 100%;
+	box-sizing: border-box;
+}
+
+.wf_td{
+	text-decoration: none !important;
+	border-top-width: 1px;
+	border-top-style: solid;
+	border-top-color: #ddd;
+	border-bottom-width: 1px;
+	border-bottom-style: solid;
+	border-bottom-color: #ddd;
+
+	color: black;
+	padding: 8px;
+	font-family:  'Courier New', Courier, monospace;
+}
+
+.wf_tr:nth-child(even) {background-color: #f2f2f2}
+.wf_tr:hover {background-color: lightgray}
+
+.link_to_page{
+	text-decoration: none !important;
+    color: #1A68BE !important;
+}
+
+.full_wf_table{
+	text-align: left;
+	border-collapse:  collapse;
+	width: 100%;
+	box-sizing: border-box;
+}

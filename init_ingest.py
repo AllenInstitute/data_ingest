@@ -1,15 +1,27 @@
 from ingest import *
+from ingest_lib import *
+from file_creation.product_inventory_template_writer import *
+
+SETTINGS_FOLDER = './settings'
+SETTINGS_FILE = 'settings.json'
 
 def main():
 	print("running test ingest")
 
-	# blazegraph = BlazeGraph()
+	settings_file = os.path.join(SETTINGS_FOLDER, SETTINGS_FILE)
+	settings = IngestLib.get_json_data_from_file(settings_file)
 
-	user = 'Nathan'
-	ingest_selection = 'test_ingest'
-	zip_file = 'temp.zip'
+	uploader_uid = 'uploaders_0'
+	ingest_uid = 'ingests_0'
+	# zip_file = '/scratch/allen/metadata/data_inventory_20200702.zip'
+	zip_file = '/scratch/allen/metadata/cleaned.zip'
+	template = '/scratch/allen/data_ingest/templates/project_inventory.json'
 
-	ingest = Ingest(user, ingest_selection, zip_file)
+	print('writing template', template)
+
+	ProjectInventoryTemplateWriter(template, settings['ingest_prefix'])
+
+	Ingest(uploader_uid, ingest_uid, zip_file)
 
 	print('finished...')
 

@@ -30,14 +30,44 @@ class BlazeGraph(object):
 
 		return self.server.update(query)
 
-	def get_table_data(self, table_name):
+	def set_uploader_uid(self, ingest_uid, uploader_uid):
+		uploader_triple = self.find_by_uid(uploader_uid)
+		ingest_triple = self.find_by_uid(ingest_uid)
+
+		query = ''
+
+		for prefix in self.ingest_prefixes:
+			query+=prefix
+
+		query+=' INSERT { <' + ingest_triple.subject + '> ' + IngestLib.add_prefix(self.ingest_prefix, 'uploader') + ' "' + uploader_triple.object + '" . }'
+		query+=' WHERE { <' + ingest_triple.subject + '> ' + IngestLib.add_prefix(self.ingest_prefix, 'uploader') + ' ?object .}'
+
+		# print('query', query)
+
+		self.run_sparql_update(query)
+
+	def get_table_data(self, table_name, uids):
 		query = ''
 		for prefix in self.ingest_prefixes:
 			query+=prefix
 
 		query+= 'SELECT ?subject '
 		query+= 'WHERE {' 
-		query+= '?subject '+ str(IngestLib.add_prefix(self.ingest_prefix, 'table_name')) + ' "' + str(table_name) + '" ;'
+		query+= '?subject '+ str(IngestLib.add_prefix(self.ingest_prefix, 'table_name')) + ' "' + str(table_name) + '" .'
+
+		if uids is not None:
+			query+= '?subject di:uid ?uid . '
+			query+='FILTER ( '
+
+			index = 0
+			for uid in uids:
+				query+= '?uid = "' + uid + '" '
+				if index + 1 != len(uids):
+					query+=' || '
+
+				index+=1
+			query+=')'
+
 		query+= '}'
 
 		# print(query)
@@ -63,8 +93,12 @@ class BlazeGraph(object):
 		for triples in triple_data:
 			data = {}
 
+			first_time = True
+
 			for triple in triples:
-				# print('triple', triple)
+				if first_time and 'subject' in select_attributes:
+					data['subject'] = triple.subject
+					first_time = False
 
 				attribute = self.get_attribute(triple.predicate)
 				if attribute in select_attributes:
@@ -79,12 +113,38 @@ class BlazeGraph(object):
 	def get_attribute(self, uri):
 		return uri.split('/')[LAST_ITEM]
 
-	def get_data_for_page(self, schema, table_name):
+	def get_tabular_data(self, table_name):
+		table_data = self.get_table_data(table_name, None)
+
+		tabular_data = []
+
+		schema = {}
+		rows = []
+
+		for triples in table_data:
+			first_time = True
+			row = {}
+			for triple in triples:
+				if first_time:
+					first_time = False
+
+					schema['subject'] = True
+					row['subject'] = triple.subject
+
+				schema[triple.predicate] = True
+				row[triple.predicate] = triple.object
+
+			rows.append(row)
+
+		return schema, rows
+
+	def get_data_for_page(self, schema, table_name, uids):
 		select_attributes = {}
+
 		for column_name in schema:
 			select_attributes[column_name] = True
 
-		table_data = self.get_table_data(table_name)
+		table_data = self.get_table_data(table_name, uids)
 
 		data = self.get_selected_data(table_data, select_attributes)
 
@@ -128,7 +188,7 @@ class BlazeGraph(object):
 
 		
 		if not fast_query:
-			print('query', query)
+			# print('query', query)
 			self.run_sparql_update(query)
 
 		return query
@@ -288,6 +348,33 @@ class BlazeGraph(object):
 
 		return self.get_triple_holder(triples, triple.object, triple.object)
 
+	def get_all_triples(self):
+		results = []
+
+		query = ''
+		for prefix in self.ingest_prefixes:
+			query+=prefix
+
+		query+= 'SELECT ?subject ?predicate ?object '
+		query+= 'WHERE {' 
+		query+= '?subject ?predicate ?object .'
+		query+= '}'
+
+		# print('query', query)
+
+		query_results = self.run_sparql_query(query)
+
+		bindings = query_results['results']['bindings']
+		
+		for binding in bindings:
+			attributes = {}
+			attributes['subject'] = binding['subject']['value']
+			attributes['predicate'] = binding['predicate']['value']
+			attributes['object'] = binding['object']['value']
+
+			results.append(attributes)
+
+		return results
 
 	def find_distinct_objects_by_predicate(self, predicate_prefix, predicate):
 		results = []
@@ -550,7 +637,7 @@ class BlazeGraph(object):
 				for key, value in json_data_extra_global_fields.items():
 					attributes[key] = value
 
-				full_qeury+=self.add_or_update_attributes(unique_key, attributes, table_name, False)
+				full_qeury+=self.add_or_update_attributes(unique_key, attributes, table_name, True)
 
 				index+=1
 

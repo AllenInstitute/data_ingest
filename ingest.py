@@ -31,13 +31,16 @@ class Ingest(object):
 		self.template = self.ingest_triple.get_attribute('template')
 		self.storage_directory = self.ingest_triple.get_attribute('storage_directory')
 
+		self.update_ingest(uploader_uid, ingest_uid)
 		self.extract_zip()
 		self.store_data()
+		
+
+	def update_ingest(self, uploader_uid, ingest_uid):
+		self.blaze_graph.set_uploader_uid(ingest_uid, uploader_uid)
 
 	def extract_zip(self):
 		print('extracting ' + str(self.zip_file) + ' to ' + str(self.storage_directory))
-
-		self.storage_directory
 
 		with zipfile.ZipFile(self.zip_file,"r") as zip_ref:
 

@@ -4,6 +4,9 @@
 	<meta charset="utf-8" />
 	<title>{{ title }}</title>
 	<link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+	<script src="{{url_for('static', filename='js/jquery-3.5.1.js')}}"></script>
+	<script src="{{url_for('static', filename='js/uploaders.js')}}"></script>
+	<script src="{{url_for('static', filename='js/bootstrap.min.js')}}"></script>
 </head>
 <body>
 
@@ -19,7 +22,7 @@
 			</th>
 
 			<th class='header_th'>
-				<a class='menu_link' id='selected_link' href="uploaders.html">uploaders</a>
+				<a class='menu_link' id='selected_link' href="uploaders">uploaders</a>
 			</th>
 
 			<th class='header_th'>
@@ -37,27 +40,35 @@
 			<th class='header_th'>
 				<a class='menu_link' href="query.html">query</a>
 			</th>
+
+			<th class='header_th'>
+				<input id='search' class='form-control' type="text" placeholder="Search...">
+			</th>
 		</tr>
 	</table>
 </div>
 
+<p>Found {{results_length}} {{number_label}}</p>
+
 <div>
-	<table id='header_table'>
+	<table id='wf_table'>
+		<thead>
 			<tr>
 				{% for column_name in schema %}
-					<th>{{column_name}}</th>
+					<th class='wf_th'>{{column_name}}</th>
 				{% endfor %}
 			</tr>
+		</thead>
 
-
+		<tbody id="table_data">
 			{% for uploader in uploaders %}
-			<tr>
+			<tr class='wf_tr'>
 				{% for column_name in schema %}
-					<td>{{uploader[column_name]}}</td>
+					<td class='wf_td'>{{uploader[column_name]}}</td>
 				{% endfor %}
 			</tr>
 			{% endfor %}
-
+		</tbody>
 	</table>
 </div>
 
