@@ -62,15 +62,38 @@
 
 		<tbody id="table_data">
 			{% for triple in triples %}
-			<tr class='wf_tr'>
-				{% for column_name in schema %}
-					{% if column_name == 'subject' %}
-						<td class='wf_td'><a class='link_to_page' href={{ url_for('subject', subject=triple[column_name]) }}>{{triple[column_name]}}</a></td>
+				<tr class='wf_tr'>
+					{% if triple.predicate == 'http://www.w3.org/1999/02/22-rdf-syntax-ns#has_part' %}
+							{% for column_name in schema %}
+								{% if column_name == 'subject' %}
+									<td class='wf_td'><a class='link_to_page' href={{ url_for('subject', subject=triple[column_name]) }}>{{triple[column_name]}}</a></td>
+								{% elif column_name == 'object' %}
+									<td class='wf_td'><a class='link_to_page' href={{ url_for('subject', subject=triple[column_name]) }}>{{triple[column_name]}}</a></td>
+								{% else %}
+									<td class='wf_td'>{{triple[column_name]}}</td>
+								{% endif %}
+							{% endfor %}
+					{% elif 'table_name' in triple.predicate %}
+							{% for column_name in schema %}
+								{% if column_name == 'subject' %}
+									<td class='wf_td'><a class='link_to_page' href={{ url_for('subject', subject=triple[column_name]) }}>{{triple[column_name]}}</a></td>
+								{% elif column_name == 'object' %}
+									<td class='wf_td'><a class='link_to_page' href={{ url_for('tabular', table_names=triple[column_name]) }}>{{triple[column_name]}}</a></td>
+								{% else %}
+									<td class='wf_td'>{{triple[column_name]}}</td>
+								{% endif %}
+							{% endfor %}
 					{% else %}
-						<td class='wf_td'>{{triple[column_name]}}</td>
+							{% for column_name in schema %}
+								{% if column_name == 'subject' %}
+									<td class='wf_td'><a class='link_to_page' href={{ url_for('subject', subject=triple[column_name]) }}>{{triple[column_name]}}</a></td>
+								{% else %}
+									<td class='wf_td'>{{triple[column_name]}}</td>
+								{% endif %}
+							{% endfor %}
+						
 					{% endif %}
-				{% endfor %}
-			</tr>
+				</tr>
 			{% endfor %}
 		</tbody>
 	</table>

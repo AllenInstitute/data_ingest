@@ -128,7 +128,7 @@ def triples():
 
 	triples = blaze_graph.get_all_triples()
 	results_length = len(triples)
-	schema = ['subject', 'object', 'predicate']
+	schema = ['subject',  'predicate', 'object']
 	number_label = get_results_label(results_length)
 
 	print('number_label', number_label)

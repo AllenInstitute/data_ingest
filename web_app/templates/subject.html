@@ -66,11 +66,20 @@
 
 			<tbody id="table_data">
 				{% for triple in triples %}
-				<tr class='wf_tr'>
-					<td class='wf_td'>{{full_subject}}</td>
-					<td class='wf_td'>{{triple.predicate}}</td>
-					<td class='wf_td'>{{triple.object}}</td>
-				</tr>
+					<tr class='wf_tr'>
+						<td class='wf_td'><a class='link_to_page' href={{ url_for('subject', subject=full_subject) }}>{{full_subject}}</a></td>
+						<td class='wf_td'>{{triple.predicate}}</td>
+
+						{% if triple.predicate == 'http://www.w3.org/1999/02/22-rdf-syntax-ns#has_part' %}
+							<td class='wf_td'><a class='link_to_page' href={{ url_for('subject', subject=triple.object) }}>{{triple.object}}</a></td>
+						{% elif 'table_name' in triple.predicate %}
+							<td class='wf_td'><a class='link_to_page' href={{ url_for('tabular', table_names=triple.object) }}>{{triple.object}}</a></td>
+						{% else %}
+							<td class='wf_td'>{{triple.object}}</td>
+						{% endif %}
+
+						
+					</tr>
 				{% endfor %}
 			</tbody>
 		</table>

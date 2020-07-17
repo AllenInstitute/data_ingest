@@ -39,6 +39,7 @@ class BlazeGraph(object):
 		for prefix in self.ingest_prefixes:
 			query+=prefix
 
+		query+=' DELETE { <' + ingest_triple.subject + '> ' + IngestLib.add_prefix(self.ingest_prefix, 'uploader') + ' ?object .}'
 		query+=' INSERT { <' + ingest_triple.subject + '> ' + IngestLib.add_prefix(self.ingest_prefix, 'uploader') + ' "' + uploader_triple.object + '" . }'
 		query+=' WHERE { <' + ingest_triple.subject + '> ' + IngestLib.add_prefix(self.ingest_prefix, 'uploader') + ' ?object .}'
 
@@ -87,6 +88,23 @@ class BlazeGraph(object):
 
 		return ingests
 
+	def set_ingest_state(self, ingest_uid, state):
+		ingest_triple = self.find_by_uid(ingest_uid)
+
+		query = ''
+
+		for prefix in self.ingest_prefixes:
+			query+=prefix
+
+		query+=' DELETE { <' + ingest_triple.subject + '> ' + IngestLib.add_prefix(self.ingest_prefix, 'status') + ' ?object .}'
+		query+=' INSERT { <' + ingest_triple.subject + '> ' + IngestLib.add_prefix(self.ingest_prefix, 'status') + ' "' + state + '" . }'
+		query+=' WHERE { <' + ingest_triple.subject + '> ' + IngestLib.add_prefix(self.ingest_prefix, 'status') + ' ?object .}'
+
+		# print('query', query)
+
+		self.run_sparql_update(query)
+
+
 	def get_selected_data(self, triple_data, select_attributes):
 		selected = []
 
@@ -131,8 +149,11 @@ class BlazeGraph(object):
 					schema['subject'] = True
 					row['subject'] = triple.subject
 
-				schema[triple.predicate] = True
-				row[triple.predicate] = triple.object
+
+				column_name = self.get_attribute(triple.predicate)
+
+				schema[column_name] = True
+				row[column_name] = triple.object
 
 			rows.append(row)
 

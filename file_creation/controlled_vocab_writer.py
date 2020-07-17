@@ -99,7 +99,6 @@ class ControlledVocabWriter(object):
 		ingestion_instance_extra['di:status'] = 'pending'
 		ingestion_instance_extra['di:locked'] = 'False'
 		ingestion_instance_extra['di:uploader'] = 'None'
-		ingestion_instance_extra['di:number_of_files'] = 0
 
 		return ingestion_instance_extra
 

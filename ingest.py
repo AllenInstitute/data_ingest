@@ -17,27 +17,33 @@ INDEX_TO_SECOND_TABLE = 1
 
 class Ingest(object):
 	def __init__(self, uploader_uid, ingest_uid, zip_file):
-		settings_file = os.path.join(SETTINGS_FOLDER, SETTINGS_FILE)
-		self.zip_file = zip_file
+		try:
+			settings_file = os.path.join(SETTINGS_FOLDER, SETTINGS_FILE)
+			self.zip_file = zip_file
 
-		self.settings = IngestLib.get_json_data_from_file(settings_file)
-		self.ingest_prefix = self.settings['ingest_prefix']
+			self.settings = IngestLib.get_json_data_from_file(settings_file)
+			self.ingest_prefix = self.settings['ingest_prefix']
 
-		self.blaze_graph = BlazeGraph(self.settings)
-		self.validation = Validation(self.settings)
-		self.validation.run_default_validation(uploader_uid, ingest_uid, zip_file)
-		self.ingest_triple = self.validation.ingest_triple
+			self.blaze_graph = BlazeGraph(self.settings)
+			self.validation = Validation(self.settings)
+			self.validation.run_default_validation(uploader_uid, ingest_uid, zip_file)
+			self.ingest_triple = self.validation.ingest_triple
 
-		self.template = self.ingest_triple.get_attribute('template')
-		self.storage_directory = self.ingest_triple.get_attribute('storage_directory')
+			self.template = self.ingest_triple.get_attribute('template')
+			self.storage_directory = self.ingest_triple.get_attribute('storage_directory')
 
-		self.update_ingest(uploader_uid, ingest_uid)
-		self.extract_zip()
-		self.store_data()
-		
+			self.blaze_graph.set_uploader_uid(ingest_uid, uploader_uid)
+			self.blaze_graph.set_ingest_state(ingest_uid, 'uploading')
 
-	def update_ingest(self, uploader_uid, ingest_uid):
-		self.blaze_graph.set_uploader_uid(ingest_uid, uploader_uid)
+			self.extract_zip()
+			self.store_data()
+
+			self.blaze_graph.set_ingest_state(ingest_uid, 'uploaded')
+
+		except Exception as e:
+			print(e)
+			self.blaze_graph.set_ingest_state(ingest_uid, 'upload failed')
+
 
 	def extract_zip(self):
 		print('extracting ' + str(self.zip_file) + ' to ' + str(self.storage_directory))
