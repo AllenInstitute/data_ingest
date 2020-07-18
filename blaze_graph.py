@@ -339,8 +339,6 @@ class BlazeGraph(object):
 		query+= '?subject ' + IngestLib.add_prefix(self.ingest_prefix, 'uid') + ' "' + str(uid) + '"'
 		query+= '}'
 
-		# print('query', query)
-
 		query_results = self.run_sparql_query(query)
 
 		bindings = query_results['results']['bindings']
@@ -355,19 +353,49 @@ class BlazeGraph(object):
 		return Triple(subject, IngestLib.add_prefix(self.ingest_prefix, 'uid'), str(uid))
 
 	def get_triple_holder(self, triples, subject, unique_key):
-		triple_holder = TriplesHolder(subject, IngestLib.add_prefix(self.ingest_prefix, unique_key))
+
+		triple_holder = TriplesHolder('', subject)
 		for triple in triples:
 			triple_holder.add_data(self.get_attribute(triple.predicate), triple.object)
 
+
 		return triple_holder
+
+	def get_by_uids(self, uids):
+		schema = {}
+		rows = []
+		table_data = []
+
+		for uid in uids:
+			triple_holder = self.get_triples_from_uid(uid)
+
+			triples = triple_holder.triples
+			first_time = True
+			row = {}
+			for triple in triples:
+				if first_time:
+					first_time = False
+
+					schema['subject'] = True
+					row['subject'] = triple_holder.raw_subject
+
+				column_name = self.get_attribute(triple.predicate)
+
+				schema[column_name] = True
+				row[column_name] = triple.object
+
+			rows.append(row)
+
+		return schema, rows
 
 	def get_triples_from_uid(self, ingest_uid):
 
 		triple = self.find_by_uid(ingest_uid)
 
-		triples = self.find_all_by_subject(IngestLib.add_prefix(self.subject_start + self.ingest_prefix, triple.object))
+		# triples = self.find_all_by_subject(IngestLib.add_prefix(self.subject_start + self.ingest_prefix, triple.subject))
+		triples = self.find_all_by_subject(triple.subject)
 
-		return self.get_triple_holder(triples, triple.object, triple.object)
+		return self.get_triple_holder(triples, triple.subject, triple.object)
 
 	def get_all_triples(self):
 		results = []

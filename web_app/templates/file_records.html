@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+	<meta charset="utf-8" />
+	<title>{{ title }}</title>
+	<link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+	<script src="{{url_for('static', filename='js/jquery-3.5.1.js')}}"></script>
+	<script src="{{url_for('static', filename='js/file_records.js')}}"></script>
+	<script src="{{url_for('static', filename='js/bootstrap.min.js')}}"></script>
+</head>
+<body>
+
+<div>
+	<table id='header_table'>
+		<tr>
+			<th class='header_th'>
+				<a class='menu_link' href="index.html">home</a>
+			</th>
+
+			<th class='header_th'>
+				<a class='menu_link' href="ingests.html">ingests</a>
+			</th>
+
+			<th class='header_th'>
+				<a class='menu_link' href="uploaders">uploaders</a>
+			</th>
+
+			<th class='header_th'>
+				<a class='menu_link' href="tables.html">tables</a>
+			</th>
+
+			<th class='header_th'>
+				<a class='menu_link' href="tabular.html">tabular</a>
+			</th>
+
+			<th class='header_th'>
+				<a class='menu_link' href="triples.html">triples</a>
+			</th>
+
+			<th class='header_th'>
+				<a class='menu_link' href="query.html">query</a>
+			</th>
+
+			<th class='header_th'>
+				<input class='form-control' type="text" placeholder="Search...">
+			</th>
+		</tr>
+	</table>
+</div>
+
+<p>Found {{results_length}} {{number_label}}</p>
+
+<div>
+	<table id='wf_table'>
+		<thead>
+			<tr>
+				{% for column_name in schema %}
+					<th class="wf_th">{{column_name}}</th>
+				{% endfor %}
+			</tr>
+		</thead>
+
+	<tbody id='table_data'>
+		{% for row in rows %}
+		<tr class='wf_tr'>
+			{% for column_name in schema %}
+				{% if column_name == 'subject' %}
+					<td class='wf_td'><a class='link_to_page' href={{ url_for('subject', subject=row[column_name]) }}>{{row[column_name]}}</a></td>
+				{% else %}
+					<td class='wf_td'>{{row[column_name]}}</td>
+				{% endif %}
+			{% endfor %}
+		</tr>
+		{% endfor %}
+	</tbody>
+
+	</table>
+</div>
+
+</body>
+</html>

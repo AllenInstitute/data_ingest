@@ -162,9 +162,30 @@ def subject():
 
 	return flask.render_template('subject.html', title='Subject', subject=subject, missing_subject=missing_subject, triples=triples, results_length=results_length, number_label=number_label, schema=schema, full_subject=full_subject)
 
-@APP.route('/query.html')
+@APP.route('/query')
 def query():
 	return flask.render_template('query.html', title='Query')
+
+@APP.route('/file_records.html')
+def file_records():
+	settings_file =  os.path.join(SETTINGS_FOLDER, SETTINGS_FILE)
+	settings = IngestLib.get_json_data_from_file(settings_file)
+	blaze_graph = BlazeGraph(settings)
+
+	schema = []
+	rows = []
+
+	uids = request.args.get('uids')
+	if uids is not None:
+		uids = uids.split(',')
+		schema, rows = blaze_graph.get_by_uids(uids)
+
+
+	results_length = len(rows)
+	number_label = get_results_label(results_length)
+
+
+	return flask.render_template('file_records.html', title='File Records', results_length=results_length, number_label=number_label, schema=schema, rows=rows)
 
 if __name__ == '__main__':
     APP.debug=True

@@ -3,6 +3,7 @@ from triple import *
 class TriplesHolder(object):
 	def __init__(self, subject_start, subject):
 		self.subject = '<' + str(subject_start ) + str(subject) + '>'
+		self.raw_subject = subject
 
 		self.triples = []
 		self.prefixes = []
