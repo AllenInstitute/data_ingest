@@ -103,8 +103,8 @@ class Ingest(object):
 			instance[IngestLib.add_prefix(self.ingest_prefix,'created_at')] = datetime.now()
 			instance[IngestLib.add_prefix(self.ingest_prefix,'size_in_bytes')] = os.path.getsize(file_path)
 			instance[IngestLib.add_prefix(self.ingest_prefix,'md5sum')] = IngestLib.get_md5(file_path)
-			
-			instance['rdf:has_part'] = self.ingest_triple.subject
+
+			instance['rdf:has_part'] = self.ingest_triple.raw_subject
 
 
 			values.append(instance)

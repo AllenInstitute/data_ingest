@@ -68,6 +68,12 @@
 				{% for column_name in schema %}
 					{% if column_name == 'subject' %}
 						<td class='wf_td'><a class='link_to_page' href={{ url_for('subject', subject=ingest[column_name]) }}>{{ingest[column_name]}}</a></td>
+					{% elif column_name == 'file_record_uids' %}
+						{% if ingest[column_name][1] == 0 %}
+							<td class='wf_td'>None</td>
+						{% else %}
+							<td class='wf_td'><a class='link_to_page' href={{ url_for('file_records', uids=ingest[column_name][0]) }}>Files({{ingest[column_name][1]}})</a></td>
+						{% endif %}
 					{% elif column_name == 'uploader' and ingest[column_name] != 'None' %}
 						<td class='wf_td'><a class='link_to_page' href={{ url_for('uploaders', uids=ingest[column_name]) }}>{{ingest[column_name]}}</a></td>
 					{% else %}

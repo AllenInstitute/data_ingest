@@ -64,7 +64,7 @@
 		{% for row in rows %}
 		<tr class='wf_tr'>
 			{% for column_name in schema %}
-				{% if column_name == 'subject' %}
+				{% if column_name == 'subject' or column_name == '22-rdf-syntax-ns#has_part' %}
 					<td class='wf_td'><a class='link_to_page' href={{ url_for('subject', subject=row[column_name]) }}>{{row[column_name]}}</a></td>
 				{% else %}
 					<td class='wf_td'>{{row[column_name]}}</td>

@@ -11,7 +11,10 @@ class TriplesHolder(object):
 
 	def add_data(self, predicate, object_value):
 		self.attributes[predicate] = object_value
-		self.triples.append(Triple(self.subject, str(predicate), '"' + str(object_value) + '"'))
+		self.triples.append(Triple(str(self.subject), str(predicate), object_value))
+		# self.triples.append(Triple(self.subject, str(predicate), str(object_value)))
+
+		# print('type(object_value)', type(object_value), object_value, predicate)
 
 		# self.predicates.append(str(predicate))
 		# self.objects.append('"' + str(object_value) + '"')
@@ -28,7 +31,7 @@ class TriplesHolder(object):
 
 		triple = self.triples[index]
 
-		return triple.predicate, triple.object
+		return triple.predicate, triple.get_object_for_insert()
 
 	def is_last_index(self, i):
 		return ((i + 1) == self.number_of_triples())
