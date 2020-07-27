@@ -5,6 +5,9 @@ from controlled_vocab_validation import *
 from triples_holder import *
 from ingest_lib import *
 from datetime import datetime
+# import urllib
+from urllib.request import urlopen
+import json
 
 INDEX_TO_FIRST = 0
 INDEX_TO_SECOND = 1
@@ -18,7 +21,9 @@ class BlazeGraph(object):
 		self.ingest_prefixes = settings['ingest_prefixes']
 		self.ingest_prefix = settings['ingest_prefix']
 		self.subject_start = settings['subject_start']
+		self.uid_service = settings['uid_service']
 		self.server = self.connect_to_server()
+		self.uid_keys = []
 
 	def connect_to_server(self):
 		return sparql.SPARQLServer(self.blaze_graph_server)
@@ -384,6 +389,62 @@ class BlazeGraph(object):
 
 		return id_key
 
+	def get_uploader_uid_by_name(self, name):
+		query = ''
+		for prefix in self.ingest_prefixes:
+			query+=prefix
+
+		query+= 'SELECT ?object '
+		query+= 'WHERE {' 
+		query+= '?subject ' + IngestLib.add_prefix(self.ingest_prefix, 'name') + ' "' + str(name) + '" . '
+		query+= '?subject ' + IngestLib.add_prefix(self.ingest_prefix, 'name_space') + ' "uploaders" . '
+		query+= '?subject ' + IngestLib.add_prefix(self.ingest_prefix, 'uid') + ' ?object .'
+		query+= '}'
+
+		# print('query', query)
+
+		query_results = self.run_sparql_query(query)
+
+		bindings = query_results['results']['bindings']
+
+		uid = None
+
+		if len(bindings) != SINGLE_RESULT:
+			raise Exception('Expected query to return a single result but it did not ' + str(query))
+		else:
+			uid = bindings[INDEX_TO_FIRST]['object']['value']
+
+		return uid
+
+
+	def get_ingest_uid_by_name(self, name):
+		query = ''
+		for prefix in self.ingest_prefixes:
+			query+=prefix
+
+		query+= 'SELECT ?object '
+		query+= 'WHERE {' 
+		query+= '?subject ' + IngestLib.add_prefix(self.ingest_prefix, 'name') + ' "' + str(name) + '" .'
+		query+= '?subject ' + IngestLib.add_prefix(self.ingest_prefix, 'name_space') + ' "ingests" . '
+		query+= '?subject ' + IngestLib.add_prefix(self.ingest_prefix, 'uid') + ' ?object .'
+		query+= '}'
+
+		# print('query', query)
+
+		query_results = self.run_sparql_query(query)
+
+		bindings = query_results['results']['bindings']
+
+		uid = None
+
+		if len(bindings) != SINGLE_RESULT:
+			raise Exception('Expected query to return a single result but it did not ' + str(query))
+		else:
+			uid = bindings[INDEX_TO_FIRST]['object']['value']
+
+		return uid
+
+
 	def find_by_uid(self, uid):
 		# print(IngestLib.add_prefix(self.ingest_prefix, 'uid') )
 
@@ -685,9 +746,68 @@ class BlazeGraph(object):
 
 		return query
 
+	def get_id_keys(self, number_of_keys):
+
+		key_url = self.uid_service + 'type=get_new_uids&number_of_uids=' + str(number_of_keys)
+
+		# print('key_url', key_url)
+
+		with urlopen(key_url) as url:
+			data = json.loads(url.read())
+
+			uids = []
+
+			if 'state' not in data or 'message' not in data or 'uids' not in data:
+				raise Exception('something went wrong getting new uids -- ' + str(key_url))
+
+			elif data['state'] != 'Success':
+				raise Exception('something went wrong getting new uids -- ' + str(data['message']) )
+
+			else:
+				uids = data['uids']
+
+
+			if len(uids) != number_of_keys:
+				raise Exception('Expected retrieved wrong number of uids ' + str(number_of_keys) + ' != ' + str(len(uids)))
+
+			# print('uids', uids)
+
+			return uids
+
+	def delete_uids(self):
+		for uid_key in self.uid_keys:
+			key_url = self.uid_service + 'type=remove_uid&uid=' + str(uid_key)
+
+			with urlopen(key_url) as url:
+				data = json.loads(url.read())
+
+				if 'state' not in data:
+					raise Exception('something went wrong getting new uids -- ' + str(key_url))
+
+				elif data['state'] != 'Success':
+					raise Exception('something went wrong getting new uids -- ' + str(data['message']) )
+
+	def finalize_uids(self):
+		for uid_key in self.uid_keys:
+			key_url = self.uid_service + 'type=finalize_uid&uid=' + str(uid_key)
+
+			with urlopen(key_url) as url:
+				data = json.loads(url.read())
+
+				if 'state' not in data:
+					raise Exception('something went wrong getting new uids -- ' + str(key_url))
+
+				elif data['state'] != 'Success':
+					raise Exception('something went wrong getting new uids -- ' + str(data['message']) )
+
+
 	def insert_data(self, values, name_space, ingest_triple):
 
-		uid_keys = self.get_next_id_keys(name_space, len(values))
+		# uid_keys = self.get_next_id_keys(name_space, len(values))
+		# uid_keys = self.get_id_keys(len(values))
+		# self.uid_keys+= self.get_id_keys(len(values))
+		current_uid_keys = self.get_id_keys(len(values))
+		self.uid_keys+= current_uid_keys
 
 		fast_query = True
 
@@ -698,7 +818,7 @@ class BlazeGraph(object):
 		query = ''
 		for attributes in values:
 			# unique_key = self.get_next_id_key(name_space)
-			unique_key = uid_keys[index]
+			unique_key =current_uid_keys[index]
 			attributes[IngestLib.add_prefix(self.ingest_prefix,'data_type')] = 'ingest_data'
 			
 			query+= self.add_or_update_attributes(unique_key, attributes, name_space, fast_query, ingest_triple)
@@ -729,12 +849,15 @@ class BlazeGraph(object):
 
 			ControlledVocabValidation.validate_name_space(name_space, json_file, values, json_data_template, json_file_template)
 
-			uid_keys = self.get_next_id_keys(name_space, len(values))
+			# uid_keys = self.get_next_id_keys(name_space, len(values))
+
+			current_uid_keys = self.get_id_keys(len(values))
+			self.uid_keys+= current_uid_keys
 
 			index = 0
 			for attributes in values:
 				# unique_key = self.get_next_id_key(name_space)
-				unique_key = uid_keys[index]
+				unique_key = current_uid_keys[index]
 
 				if(IngestLib.add_prefix(self.ingest_prefix,'created_at') in attributes):
 					attributes[IngestLib.add_prefix(self.ingest_prefix,'created_at')] = datetime.now()

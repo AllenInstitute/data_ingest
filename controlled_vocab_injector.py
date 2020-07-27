@@ -52,6 +52,8 @@ def main():
 
 	blaze_graph.insert_controlled_vocab(controlled_vocab, controlled_vocab_template, controlled_vocab_extra_fields, controlled_vocab_global_extra_fields)
 
+	blaze_graph.finalize_uids()
+
 	print('finished')
 
 

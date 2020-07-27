@@ -37,11 +37,15 @@ class Ingest(object):
 			self.extract_zip()
 			self.store_data()
 
+			# raise Exception('Test')
+
 			self.blaze_graph.set_ingest_state(ingest_uid, 'uploaded')
+			self.blaze_graph.finalize_uids()
 
 		except Exception as e:
 			print(e)
 			self.blaze_graph.set_ingest_state(ingest_uid, 'upload failed')
+			self.blaze_graph.delete_uids()
 
 
 	def extract_zip(self):

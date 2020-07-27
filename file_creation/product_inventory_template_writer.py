@@ -71,7 +71,7 @@ class ProjectInventoryTemplateWriter(object):
 		return IngestLib.create_template_validation(True, 'csv', 'join', self.ingest_prefix, 'project_protocol.csv')
 
 	def get_project_technique_data(self):
-		return IngestLib.create_template_validation(True, 'csv', 'data', self.ingest_prefix, 'project_technique.csv')
+		return IngestLib.create_template_validation(True, 'csv', 'join', self.ingest_prefix, 'project_technique.csv')
 
 	def get_protocol_data(self):
 		return IngestLib.create_template_validation(True, 'csv', 'data', self.ingest_prefix, 'protocol.csv')

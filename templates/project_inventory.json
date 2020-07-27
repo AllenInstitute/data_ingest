@@ -39,8 +39,10 @@
     {
       "required": true,
       "file_type": "csv",
-      "data_type": "data",
-      "file_name": "project_technique.csv"
+      "data_type": "join",
+      "file_name": "project_technique.csv",
+      "join_name_space_one": "project",
+      "join_name_space_two": "technique"
     },
     {
       "required": true,

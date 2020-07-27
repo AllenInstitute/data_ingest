@@ -15,6 +15,7 @@ class SettingsWriter(object):
 		settings['ingest_prefixes'] = ' '.join(prefixes)
 		settings['ingest_prefix'] = ingest_prefix
 		settings['subject_start'] = 'http://data_ingest/'
+		settings['uid_service'] = 'http://127.0.0.1:8000/development/uid_service?'
 
 		with open(file_path, 'w') as outfile:
 			json.dump(settings, outfile, indent=2)

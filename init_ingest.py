@@ -11,8 +11,8 @@ def main():
 	settings_file = os.path.join(SETTINGS_FOLDER, SETTINGS_FILE)
 	settings = IngestLib.get_json_data_from_file(settings_file)
 
-	uploader_uid = 'uploaders_0'
-	ingest_uid = 'ingests_0'
+	uploader_uid = 'fKcWp02fHkzJieU'
+	ingest_uid = 'fKcWp02fHkzJieU'
 	# zip_file = '/scratch/allen/metadata/data_inventory_20200702.zip'
 	zip_file = '/scratch/allen/metadata/cleaned.zip'
 	template = '/scratch/allen/data_ingest/templates/project_inventory.json'
@@ -20,6 +20,11 @@ def main():
 	print('writing template', template)
 
 	ProjectInventoryTemplateWriter(template, settings['ingest_prefix'])
+
+	blaze_graph = BlazeGraph(settings)
+
+	uploader_uid = blaze_graph.get_uploader_uid_by_name('Nathan Sjoquist')
+	ingest_uid = blaze_graph.get_ingest_uid_by_name('project inventory metadata')
 
 	Ingest(uploader_uid, ingest_uid, zip_file)
 
