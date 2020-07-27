@@ -39,7 +39,7 @@ def ingests():
 	if uids is not None:
 		uids = uids.split(',')
 
-	schema = ['subject', 'file_record_uids', 'uid', 'name', 'status', 'uploader', 'description', 'locked', 'storage_directory', 'template']
+	schema = ['subject', 'file_record_uids', 'uid', 'name', 'status', 'uploader', 'description', 'locked', 'storage_directory', 'template', 'created_at', 'uploaded_at']
 
 	ingests = blaze_graph.get_data_for_page(schema, 'ingests', uids)
 
@@ -48,15 +48,15 @@ def ingests():
 
 	return flask.render_template('ingests.html', title='Ingests', ingests=ingests, schema=schema, results_length=results_length, number_label=number_label)
 
-@APP.route('/tables.html')
-def tables():
+@APP.route('/name_spaces.html')
+def name_spaces():
 
-	tables = blaze_graph.find_distinct_objects_by_predicate(settings['ingest_prefix'], 'table_name')
+	name_spaces = blaze_graph.find_distinct_objects_by_predicate(settings['ingest_prefix'], 'name_space')
 
-	results_length = len(tables)
+	results_length = len(name_spaces)
 	number_label = get_results_label(results_length)
 
-	return flask.render_template('tables.html', title='Tables', tables=tables, results_length=results_length, number_label=number_label)
+	return flask.render_template('name_spaces.html', title='name_spaces', name_spaces=name_spaces, results_length=results_length, number_label=number_label)
 
 @APP.route('/uploaders.html')
 @APP.route('/uploaders')
@@ -78,24 +78,24 @@ def uploaders():
 @APP.route('/tabular.html')
 def tabular():
 
-	table_names = request.args.get('table_names')
+	name_spaces = request.args.get('name_spaces')
 
-	if table_names is not None:
-		table_names = table_names.split(',')
+	if name_spaces is not None:
+		name_spaces = name_spaces.split(',')
 	else:
-		table_names = blaze_graph.find_distinct_objects_by_predicate(settings['ingest_prefix'], 'table_name')
+		name_spaces = blaze_graph.find_distinct_objects_by_predicate(settings['ingest_prefix'], 'name_space')
 
 	tabular_results = []
 
 	results_length = 0
-	number_of_tables = len(table_names)
+	number_of_name_spaces = len(name_spaces)
 	
 
-	for table_name in table_names:
+	for name_space in name_spaces:
 		tabular_result = {}
-		tabular_result['table_name'] = table_name
+		tabular_result['name_space'] = name_space
 
-		schema, rows = blaze_graph.get_tabular_data(table_name)
+		schema, rows = blaze_graph.get_tabular_data(name_space)
 
 		tabular_result['schema'] = schema
 		tabular_result['rows'] = rows
@@ -106,7 +106,7 @@ def tabular():
 
 	number_label = get_results_label(results_length)
 
-	return flask.render_template('tabular.html', title='Tabular', tabular_results=tabular_results, results_length=results_length, number_label=number_label, number_of_tables=number_of_tables)
+	return flask.render_template('tabular.html', title='Tabular', tabular_results=tabular_results, results_length=results_length, number_label=number_label, number_of_name_spaces=number_of_name_spaces)
 
 @APP.route('/triples.html')
 def triples():

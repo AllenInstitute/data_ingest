@@ -17,24 +17,24 @@
       "file_type": "csv",
       "data_type": "join",
       "file_name": "project_archive.csv",
-      "join_table_one": "project",
-      "join_table_two": "archive"
+      "join_name_space_one": "project",
+      "join_name_space_two": "archive"
     },
     {
       "required": true,
       "file_type": "csv",
       "data_type": "join",
       "file_name": "project_investigator.csv",
-      "join_table_one": "project",
-      "join_table_two": "investigator"
+      "join_name_space_one": "project",
+      "join_name_space_two": "investigator"
     },
     {
       "required": true,
       "file_type": "csv",
       "data_type": "join",
       "file_name": "project_protocol.csv",
-      "join_table_one": "project",
-      "join_table_two": "protocol"
+      "join_name_space_one": "project",
+      "join_name_space_two": "protocol"
     },
     {
       "required": true,
@@ -71,24 +71,24 @@
       "file_type": "csv",
       "data_type": "join",
       "file_name": "project_grant.csv",
-      "join_table_one": "project",
-      "join_table_two": "grant"
+      "join_name_space_one": "project",
+      "join_name_space_two": "grant"
     },
     {
       "required": true,
       "file_type": "csv",
       "data_type": "join",
       "file_name": "project_modality.csv",
-      "join_table_one": "project",
-      "join_table_two": "modality"
+      "join_name_space_one": "project",
+      "join_name_space_two": "modality"
     },
     {
       "required": true,
       "file_type": "csv",
       "data_type": "join",
       "file_name": "project_species.csv",
-      "join_table_one": "project",
-      "join_table_two": "species"
+      "join_name_space_one": "project",
+      "join_name_space_two": "species"
     },
     {
       "required": true,

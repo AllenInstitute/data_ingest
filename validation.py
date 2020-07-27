@@ -66,14 +66,14 @@ class Validation(object):
 	def validate_controlled_vacab_json(json_file):
 		json_data = IngestLib.get_json_data_from_file(json_file)
 
-		if 'tables' not in json_data:
-			raise Exception('Expected json_file ' + str(json_file) + '  to contain the field "tables" but it does not')
+		if 'name_spaces' not in json_data:
+			raise Exception('Expected json_file ' + str(json_file) + '  to contain the field "name_spaces" but it does not')
 
-		tables = json_data['tables']
+		name_spaces = json_data['name_spaces']
 
-		for table in tables:
-			if 'table_name' not in table:
-				raise Exception('Expected json_file ' + str(json_file) + '  to contain a the field "table_name" for each table but it does not')
+		for name_space in name_spaces:
+			if 'name_space' not in name_space:
+				raise Exception('Expected json_file ' + str(json_file) + '  to contain a the field "name_space" for each name_space but it does not')
 
-			if 'values' not in table:
-				raise Exception('Expected json_file ' + str(json_file) + '  to contain a the field "values" for each table but it does not')
+			if 'values' not in name_space:
+				raise Exception('Expected json_file ' + str(json_file) + '  to contain a the field "values" for each name_space but it does not')

@@ -26,7 +26,7 @@
 			</th>
 
 			<th class='header_th'>
-				<a class='menu_link' href="tables.html">tables</a>
+				<a class='menu_link' href="name_spaces.html">name_spaces</a>
 			</th>
 
 			<th class='header_th'>
@@ -35,10 +35,6 @@
 
 			<th class='header_th'>
 				<a class='menu_link' href="triples.html">triples</a>
-			</th>
-
-			<th class='header_th'>
-				<a class='menu_link' href="query.html">query</a>
 			</th>
 
 			{% if number_of_tables == 1 %}
@@ -53,7 +49,7 @@
 <p>Found {{results_length}} {{number_label}}</p>
 
 	{% for tabular_result in tabular_results %}
-		<p>Table name: {{tabular_result['table_name']}}</p>
+		<p>Table name: {{tabular_result['name_space']}}</p>
 
 		<div>
 			<table class='full_wf_table'>
@@ -77,8 +73,8 @@
 							{% if column_name in row %}
 								{% if column_name == 'subject' %}
 									<td class='wf_td'><a class='link_to_page' href={{ url_for('subject', subject=row[column_name]) }}>{{row[column_name]}}</a></td>
-								{% elif column_name == 'table_name'%}
-									<td class='wf_td'><a class='link_to_page' href={{ url_for('tabular', table_names=row[column_name]) }}>{{row[column_name]}}</a></td>
+								{% elif column_name == 'name_space'%}
+									<td class='wf_td'><a class='link_to_page' href={{ url_for('tabular', name_spaces=row[column_name]) }}>{{row[column_name]}}</a></td>
 								{% else %}
 									<td class='wf_td'>{{row[column_name]}}</td>
 								{% endif %}

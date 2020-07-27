@@ -5,12 +5,12 @@ import glob
 from ingest_lib import *
 
 MIN_ROW_LENGTH = 1
-INDEX_TO_FIRST_TABLE = 0
-INDEX_TO_SECOND_TABLE = 1
+INDEX_TO_FIRST_NAMESPACE = 0
+INDEX_TO_SECOND_NAMESPACE = 1
 COLUMNS_IN_JOIN_TXT = 2
 
-UPLOADERS_TABLE = 'uploaders'
-INGESTS_TABLE = 'ingests'
+UPLOADERS_NAMESPACE = 'uploaders'
+INGESTS_NAMESPACE = 'ingests'
 
 class ControlledVocabWriter(object):
 	def __init__(self, ingest_prefix):
@@ -19,7 +19,7 @@ class ControlledVocabWriter(object):
 
 
 	def get_uploaders(self):
-		table_name = UPLOADERS_TABLE
+		name_space = UPLOADERS_NAMESPACE
 
 		uploader_one = {}
 		uploader_one[IngestLib.add_prefix(self.ingest_prefix,'name')] = 'Nathan Sjoquist'
@@ -48,38 +48,40 @@ class ControlledVocabWriter(object):
 		# 	uploader_values.append(uploader)
 
 		uploaders = {}
-		uploaders['table_name'] = table_name
+		uploaders['name_space'] = name_space
 		uploaders['values'] = uploader_values
 
 		return uploaders
 
 	def get_ingestion_instances(self):
-		table_name = INGESTS_TABLE
+		name_space = INGESTS_NAMESPACE
 
 		ingestion_instance_one = {}
 		ingestion_instance_one['di:name'] = 'project inventory metadata'
 		ingestion_instance_one['di:storage_directory'] = '/scratch/allen/storage_directory/project_inventory'
 		ingestion_instance_one['di:template'] = '/scratch/allen/data_ingest/templates/project_inventory.json'
 		ingestion_instance_one['di:description'] = 'Project inventory metadata upload'
+		ingestion_instance_one['di:created_at'] = None
+		ingestion_instance_one['di:uploaded_at'] = None
 
 		ingestion_instance_values = []
 		ingestion_instance_values.append(ingestion_instance_one)
 
 		ingestion_instances = {}
-		ingestion_instances['table_name'] = table_name
+		ingestion_instances['name_space'] = name_space
 		ingestion_instances['values'] = ingestion_instance_values
 
 		return ingestion_instances
 
 	def write_controlled_vocab_json_file(self, file_path):
 		controlled_vocab = {}
-		tables = []
+		name_spaces = []
 		joins = []
 
-		tables.append(self.get_uploaders())
-		tables.append(self.get_ingestion_instances())
+		name_spaces.append(self.get_uploaders())
+		name_spaces.append(self.get_ingestion_instances())
 
-		controlled_vocab['tables'] = tables
+		controlled_vocab['name_spaces'] = name_spaces
 		controlled_vocab['joins'] = joins
 
 
@@ -88,7 +90,7 @@ class ControlledVocabWriter(object):
 
 	def get_uploader_template(self):
 		uploader_template = {}
-		uploader_template['table_name'] = UPLOADERS_TABLE
+		uploader_template['name_space'] = UPLOADERS_NAMESPACE
 		uploader_template['required_fields'] = ['di:name', 'di:role']
 		uploader_template['required_files'] = []
 
@@ -105,7 +107,7 @@ class ControlledVocabWriter(object):
 
 	def get_ingestion_instance_template(self):
 		ingestion_instance_template = {}
-		ingestion_instance_template['table_name'] = INGESTS_TABLE
+		ingestion_instance_template['name_space'] = INGESTS_NAMESPACE
 		ingestion_instance_template['required_fields'] = ['di:name', 'di:storage_directory', 'di:template', 'di:description']
 		ingestion_instance_template['required_files'] = ['di:template']
 
@@ -113,13 +115,13 @@ class ControlledVocabWriter(object):
 
 	def write_controlled_vocab_template(self, file_path):
 		controlled_vocab_template = {}
-		tables = []
+		name_spaces = []
 
-		tables.append(self.get_uploader_template())
-		tables.append(self.get_ingestion_instance_template())
-		# self.add_txt_file_template_info(txt_folder_path, tables)
+		name_spaces.append(self.get_uploader_template())
+		name_spaces.append(self.get_ingestion_instance_template())
+		# self.add_txt_file_template_info(txt_folder_path, name_spaces)
 
-		controlled_vocab_template['tables'] = tables
+		controlled_vocab_template['name_spaces'] = name_spaces
 
 
 		with open(file_path, 'w') as outfile:
@@ -134,7 +136,7 @@ class ControlledVocabWriter(object):
 
 	def write_extra_fields_file(self, file_path):
 		extra_fields = {}
-		extra_fields[INGESTS_TABLE] = self.get_ingestion_instance_extra_fields()
+		extra_fields[INGESTS_NAMESPACE] = self.get_ingestion_instance_extra_fields()
 
 		with open(file_path, 'w') as outfile:
 			json.dump(extra_fields, outfile, indent=2)

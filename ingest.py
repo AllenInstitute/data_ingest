@@ -12,8 +12,6 @@ import numpy as np
 SETTINGS_FOLDER = './settings'
 SETTINGS_FILE = 'settings.json'
 MIN_ROW_LENGTH = 1
-INDEX_TO_FIRST_TABLE = 0
-INDEX_TO_SECOND_TABLE = 1
 
 class Ingest(object):
 	def __init__(self, uploader_uid, ingest_uid, zip_file):
@@ -34,6 +32,7 @@ class Ingest(object):
 
 			self.blaze_graph.set_uploader_uid(ingest_uid, uploader_uid)
 			self.blaze_graph.set_ingest_state(ingest_uid, 'uploading')
+			self.blaze_graph.set_uploaded_at(ingest_uid)
 
 			self.extract_zip()
 			self.store_data()
@@ -85,7 +84,7 @@ class Ingest(object):
 
 		values = []
 
-		table_name = 'file_records'
+		name_space = 'file_records'
 
 		for file in files:
 			file_name = file['file_name']
@@ -110,7 +109,7 @@ class Ingest(object):
 			values.append(instance)
 
 
-		self.blaze_graph.insert_data(values, table_name, self.ingest_triple)
+		self.blaze_graph.insert_data(values, name_space, self.ingest_triple)
 
 	def insert_data(self, storage_directory, template):
 		template_data = IngestLib.get_json_data_from_file(template)
@@ -129,8 +128,8 @@ class Ingest(object):
 				if file_type == 'csv':
 					print('inserting', file_name)
 
-					values, table_name = self.get_csv_data(file_path)
-					self.blaze_graph.insert_data(values, table_name, self.ingest_triple)
+					values, name_space = self.get_csv_data(file_path)
+					self.blaze_graph.insert_data(values, name_space, self.ingest_triple)
 
 				else:
 					raise Exception('file_type', str(file_type), ' not supported')
@@ -149,15 +148,15 @@ class Ingest(object):
 			file_path = os.path.join(storage_directory, file_name)
 
 			if data_type == 'join':
-				join_table_one = file['join_table_one']
-				join_table_two = file['join_table_two']
+				join_name_space_one = file['join_name_space_one']
+				join_name_space_two = file['join_name_space_two']
 
 				if file_type == 'csv':
 					print('inserting', file_name)
 
 					values = self.add_csv_joins_data(file_path)
 
-					self.blaze_graph.insert_join_data(values, join_table_one, join_table_two)
+					self.blaze_graph.insert_join_data(values, join_name_space_one, join_name_space_two)
 
 				else:
 					raise Exception('file_type', str(file_type), ' not supported')
@@ -165,7 +164,7 @@ class Ingest(object):
 
 	def get_csv_data(self, csv_file):
 		values = []
-		table_name = IngestLib.get_filename_without_extension(os.path.basename(csv_file))
+		name_space = IngestLib.get_filename_without_extension(os.path.basename(csv_file))
 
 		df = pd.read_csv(csv_file, header = 0, encoding='ISO-8859-1')
 		# df = pd.read_csv(csv_file, header = 0, encoding='ascii')
@@ -230,7 +229,7 @@ class Ingest(object):
 
 		# 		line_number+=1
 
-		return values, table_name
+		return values, name_space
 
 	def add_csv_joins_data(self, csv_file):
 		df = pd.read_csv(csv_file, header = 0, encoding='ISO-8859-1')
@@ -282,8 +281,8 @@ class Ingest(object):
 
 			# instances = {}
 			# instances['file_name'] = txt_file
-			# instances['table_one'] = table_one
-			# instances['table_two'] = table_two
+			# instances['name_space_one'] = name_space_one
+			# instances['name_space_two'] = name_space_two
 			# instances['values'] = values
 
 			# joins.append(instances)

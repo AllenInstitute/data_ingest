@@ -130,10 +130,10 @@ class IngestLib(object):
 		template_validation['file_name'] = file_name
 
 		if data_type == 'join':
-			table_names = IngestLib.get_filename_without_extension(file_name).split('_')
+			name_spaces = IngestLib.get_filename_without_extension(file_name).split('_')
 
-			template_validation['join_table_one'] = table_names[INDEX_TO_FIRST]
-			template_validation['join_table_two'] = table_names[INDEX_TO_SECOND]
+			template_validation['join_name_space_one'] = name_spaces[INDEX_TO_FIRST]
+			template_validation['join_name_space_two'] = name_spaces[INDEX_TO_SECOND]
 
 
 		return template_validation

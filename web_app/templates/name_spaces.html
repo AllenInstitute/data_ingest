@@ -26,7 +26,7 @@
 			</th>
 
 			<th class='header_th'>
-				<a class='menu_link' id='selected_link' href="tables.html">tables</a>
+				<a class='menu_link' id='selected_link' href="name_spaces.html">name_spaces</a>
 			</th>
 
 			<th class='header_th'>
@@ -35,10 +35,6 @@
 
 			<th class='header_th'>
 				<a class='menu_link' href="triples.html">triples</a>
-			</th>
-
-			<th class='header_th'>
-				<a class='menu_link' href="query.html">query</a>
 			</th>
 
 			<th class='header_th'>
@@ -58,9 +54,9 @@
 
 
 		<tbody id="table_data">
-			{% for table_name in tables %}
+			{% for name_space in name_spaces %}
 			<tr class='wf_tr'>
-				<td class='wf_td'><a class='link_to_page' href={{ url_for('tabular', table_names=table_name) }}>{{table_name}}</a></td>
+				<td class='wf_td'><a class='link_to_page' href={{ url_for('tabular', name_spaces=name_space) }}>{{name_space}}</a></td>
 			</tr>
 			{% endfor %}
 		</tbody>

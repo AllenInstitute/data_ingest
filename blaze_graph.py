@@ -4,6 +4,7 @@ from validation import *
 from controlled_vocab_validation import *
 from triples_holder import *
 from ingest_lib import *
+from datetime import datetime
 
 INDEX_TO_FIRST = 0
 INDEX_TO_SECOND = 1
@@ -77,14 +78,14 @@ class BlazeGraph(object):
 		return result
 
 
-	def get_table_data(self, table_name, uids):
+	def get_name_space_data(self, name_space, uids):
 		query = ''
 		for prefix in self.ingest_prefixes:
 			query+=prefix
 
 		query+= 'SELECT ?subject '
 		query+= 'WHERE {' 
-		query+= '?subject '+ str(IngestLib.add_prefix(self.ingest_prefix, 'table_name')) + ' "' + str(table_name) + '" .'
+		query+= '?subject '+ str(IngestLib.add_prefix(self.ingest_prefix, 'name_space')) + ' "' + str(name_space) + '" .'
 
 		if uids is not None:
 			query+= '?subject di:uid ?uid . '
@@ -117,6 +118,22 @@ class BlazeGraph(object):
 			ingests.append(self.find_all_by_subject(subject))
 
 		return ingests
+
+	def set_uploaded_at(self, ingest_uid):
+		ingest_triple = self.find_by_uid(ingest_uid)
+
+		query = ''
+
+		for prefix in self.ingest_prefixes:
+			query+=prefix
+
+		query+=' DELETE { <' + ingest_triple.subject + '> ' + IngestLib.add_prefix(self.ingest_prefix, 'uploaded_at') + ' ?object .}'
+		query+=' INSERT { <' + ingest_triple.subject + '> ' + IngestLib.add_prefix(self.ingest_prefix, 'uploaded_at') + ' "' + str(datetime.now()) + '" . }'
+		query+=' WHERE { <' + ingest_triple.subject + '> ' + IngestLib.add_prefix(self.ingest_prefix, 'uploaded_at') + ' ?object .}'
+
+		# print('query', query)
+
+		self.run_sparql_update(query)
 
 	def set_ingest_state(self, ingest_uid, state):
 		ingest_triple = self.find_by_uid(ingest_uid)
@@ -170,15 +187,15 @@ class BlazeGraph(object):
 	def get_attribute(self, uri):
 		return uri.split('/')[LAST_ITEM]
 
-	def get_tabular_data(self, table_name):
-		table_data = self.get_table_data(table_name, None)
+	def get_tabular_data(self, name_space):
+		name_space_data = self.get_name_space_data(name_space, None)
 
 		tabular_data = []
 
 		schema = {}
 		rows = []
 
-		for triples in table_data:
+		for triples in name_space_data:
 			first_time = True
 			row = {}
 			for triple in triples:
@@ -198,15 +215,15 @@ class BlazeGraph(object):
 
 		return schema, rows
 
-	def get_data_for_page(self, schema, table_name, uids):
+	def get_data_for_page(self, schema, name_space, uids):
 		select_attributes = {}
 
 		for column_name in schema:
 			select_attributes[column_name] = True
 
-		table_data = self.get_table_data(table_name, uids)
+		name_space_data = self.get_name_space_data(name_space, uids)
 
-		data = self.get_selected_data(table_data, select_attributes)
+		data = self.get_selected_data(name_space_data, select_attributes)
 
 		return data
 
@@ -229,7 +246,7 @@ class BlazeGraph(object):
 		query = 'DELETE WHERE { ?s ?p ?o};'
 		self.run_sparql_update(query)
 
-	def add_or_update_attributes(self, unique_key, attributes, table_name, fast_query, ingest_triple=None):
+	def add_or_update_attributes(self, unique_key, attributes, name_space, fast_query, ingest_triple=None):
 		query = ''
 
 		triple_holder = TriplesHolder(self.subject_start, IngestLib.add_prefix(self.ingest_prefix, unique_key))
@@ -240,7 +257,7 @@ class BlazeGraph(object):
 
 		triple_holder.add_data('rdf:label', triple_holder.subject)
 		triple_holder.add_data(IngestLib.add_prefix(self.ingest_prefix, 'uid'), unique_key)
-		triple_holder.add_data(IngestLib.add_prefix(self.ingest_prefix, 'table_name'), table_name)
+		triple_holder.add_data(IngestLib.add_prefix(self.ingest_prefix, 'name_space'), name_space)
 
 		if ingest_triple is not None:
 			# print('ingest_triple.attributes', ingest_triple.attributes)
@@ -404,7 +421,7 @@ class BlazeGraph(object):
 	def get_by_uids(self, uids):
 		schema = {}
 		rows = []
-		table_data = []
+		name_space_data = []
 
 		for uid in uids:
 			triple_holder = self.get_triples_from_uid(uid)
@@ -561,7 +578,7 @@ class BlazeGraph(object):
 
 		return Triple(subject, 'rdf:label', subject)
 
-	def find_uid_by_predicate_object(self, predicate, object_value, table_name):
+	def find_uid_by_predicate_object(self, predicate, object_value, name_space):
 		query = ''
 		for prefix in self.ingest_prefixes:
 			query+=prefix
@@ -569,7 +586,7 @@ class BlazeGraph(object):
 		query+= 'SELECT ?subject ?object '
 		query+= 'WHERE {' 
 		query+= '?subject ' + predicate + ' "' + object_value + '" . '
-		query+= '?subject ' + IngestLib.add_prefix(self.ingest_prefix, 'table_name') + ' "' + table_name + '" . '
+		query+= '?subject ' + IngestLib.add_prefix(self.ingest_prefix, 'name_space') + ' "' + name_space + '" . '
 		query+= '?subject ' + IngestLib.add_prefix(self.ingest_prefix, 'uid') + ' ?object'
 		query+= '}'
 
@@ -606,7 +623,7 @@ class BlazeGraph(object):
 
 
 
-	def insert_join_data(self, values, table_one, table_two):
+	def insert_join_data(self, values, name_space_one, name_space_two):
 		query = ''
 
 		for value in values:
@@ -622,18 +639,18 @@ class BlazeGraph(object):
 			second_predicate = second_value[INDEX_TO_FIRST]
 			second_object = second_value[INDEX_TO_SECOND]
 
-			# print('table_one', table_one)
+			# print('name_space_one', name_space_one)
 			# print('first_predicate', first_predicate)
 			# print('first_object', first_object)
 
-			# print('table_two', table_two)
+			# print('name_space_two', name_space_two)
 			# print('second_predicate', second_predicate)
 			# print('second_object', second_object)
 
 
 
-			first_triple = self.find_uid_by_predicate_object(first_predicate, first_object, table_one)
-			second_triple = self.find_uid_by_predicate_object(second_predicate, second_object, table_two)
+			first_triple = self.find_uid_by_predicate_object(first_predicate, first_object, name_space_one)
+			second_triple = self.find_uid_by_predicate_object(second_predicate, second_object, name_space_two)
 
 			query = self.insert_join(first_triple, second_triple)
 
@@ -668,23 +685,23 @@ class BlazeGraph(object):
 
 		return query
 
-	def insert_data(self, values, table_name, ingest_triple):
+	def insert_data(self, values, name_space, ingest_triple):
 
-		uid_keys = self.get_next_id_keys(table_name, len(values))
+		uid_keys = self.get_next_id_keys(name_space, len(values))
 
 		fast_query = True
 
-		# if table_name == 'project':
+		# if name_space == 'project':
 		# 	fast_query = False
 
 		index = 0
 		query = ''
 		for attributes in values:
-			# unique_key = self.get_next_id_key(table_name)
+			# unique_key = self.get_next_id_key(name_space)
 			unique_key = uid_keys[index]
 			attributes[IngestLib.add_prefix(self.ingest_prefix,'data_type')] = 'ingest_data'
 			
-			query+= self.add_or_update_attributes(unique_key, attributes, table_name, fast_query, ingest_triple)
+			query+= self.add_or_update_attributes(unique_key, attributes, name_space, fast_query, ingest_triple)
 			index+=1
 
 		if fast_query:
@@ -702,32 +719,35 @@ class BlazeGraph(object):
 
 		ControlledVocabValidation.validate_extra_fields(json_data, json_file, json_data_extra_fields, json_file_extra_fields)
 
-		tables = json_data['tables']
+		name_spaces = json_data['name_spaces']
 
 		full_qeury = ''
 
-		for table in tables:
-			table_name = table['table_name']
-			values = table['values']
+		for name_space_record in name_spaces:
+			name_space = name_space_record['name_space']
+			values = name_space_record['values']
 
-			ControlledVocabValidation.validate_table(table_name, json_file, values, json_data_template, json_file_template)
+			ControlledVocabValidation.validate_name_space(name_space, json_file, values, json_data_template, json_file_template)
 
-			uid_keys = self.get_next_id_keys(table_name, len(values))
+			uid_keys = self.get_next_id_keys(name_space, len(values))
 
 			index = 0
 			for attributes in values:
-				# unique_key = self.get_next_id_key(table_name)
+				# unique_key = self.get_next_id_key(name_space)
 				unique_key = uid_keys[index]
 
+				if(IngestLib.add_prefix(self.ingest_prefix,'created_at') in attributes):
+					attributes[IngestLib.add_prefix(self.ingest_prefix,'created_at')] = datetime.now()
+
 				#add extra fields to attributes
-				if table_name in json_data_extra_fields:
-					for key, value in json_data_extra_fields[table_name].items():
+				if name_space in json_data_extra_fields:
+					for key, value in json_data_extra_fields[name_space].items():
 						attributes[key] = value
 
 				for key, value in json_data_extra_global_fields.items():
 					attributes[key] = value
 
-				full_qeury+=self.add_or_update_attributes(unique_key, attributes, table_name, True)
+				full_qeury+=self.add_or_update_attributes(unique_key, attributes, name_space, True)
 
 				index+=1
 
