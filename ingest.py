@@ -57,7 +57,7 @@ class Ingest(object):
 			zip_ref.extractall(self.storage_directory)
 
 			#the rest of this is the bring the files directory into the storage_directory and to clean up everything
-			folder_name = os.path.basename(os.path.splitext(self.zip_file)[0])
+			folder_name = os.path.basename(os.path.splitext(self.storage_directory)[0])
 
 			unzipped_file_path = os.path.join(self.storage_directory, folder_name)
 			if os.path.isdir(unzipped_file_path):
