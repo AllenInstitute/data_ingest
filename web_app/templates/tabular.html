@@ -30,10 +30,6 @@
 			</th>
 
 			<th class='header_th'>
-				<a class='menu_link' id='selected_link' href="tabular.html">tabular</a>
-			</th>
-
-			<th class='header_th'>
 				<a class='menu_link' href="triples.html">triples</a>
 			</th>
 
@@ -49,7 +45,7 @@
 <p>Found {{results_length}} {{number_label}}</p>
 
 	{% for tabular_result in tabular_results %}
-		<p>Table name: {{tabular_result['name_space']}}</p>
+		<p>Namespace: {{tabular_result['name_space']}}</p>
 
 		<div>
 			<table class='full_wf_table'>
