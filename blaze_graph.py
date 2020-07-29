@@ -235,8 +235,11 @@ class BlazeGraph(object):
 	def delete_all_data_by_ingest(self, ingest_uid):
 		query = ''
 
+		self.remove_ids_by_ingest_uid(ingest_uid)
+
 		for prefix in self.ingest_prefixes:
 			query+=prefix
+
 
 		# query = 'DELETE WHERE { ?subject <' + str(self.subject_start) + 'ingest_id> "' + str(ingest_id) + '" . '
 		query += 'DELETE WHERE { ?subject ' + IngestLib.add_prefix(self.ingest_prefix, 'ingest_uid') + ' "' + str(ingest_uid) + '" . '
@@ -275,6 +278,35 @@ class BlazeGraph(object):
 			self.run_sparql_update(query)
 
 		return query
+
+	def remove_ids_by_ingest_uid(self, ingest_uid):
+		query = ''
+		for prefix in self.ingest_prefixes:
+			query+=prefix
+
+		query+= ' '
+		query+= 'SELECT ?object '
+		query+= 'WHERE {' 
+		query+= ' ?s ' + IngestLib.add_prefix(self.ingest_prefix, 'ingest_uid') + ' "' + str(ingest_uid)+ '" . '
+		query+= ' ?s ' + IngestLib.add_prefix(self.ingest_prefix, 'uid') + ' ?object . '
+		query+= ' }'
+
+		# print('query', query)
+
+		result = None
+
+		query_results = self.run_sparql_query(query)
+
+		bindings = query_results['results']['bindings']
+
+		uids = []
+
+		for binding in bindings:
+			uids.append(str(binding['object']['value']))
+	
+
+		self.delete_uids(uids)
+
 
 	def get_id_block(self, identifier, number_of_keys):
 		query = ''
@@ -774,8 +806,12 @@ class BlazeGraph(object):
 
 			return uids
 
-	def delete_uids(self):
-		for uid_key in self.uid_keys:
+	def delete_uids(self, uids=None):
+
+		if uids == None:
+			uids = self.uid_keys
+
+		for uid_key in uids:
 			key_url = self.uid_service + 'type=remove_uid&uid=' + str(uid_key)
 
 			with urlopen(key_url) as url:
