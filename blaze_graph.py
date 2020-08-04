@@ -836,6 +836,98 @@ class BlazeGraph(object):
 				elif data['state'] != 'Success':
 					raise Exception('something went wrong getting new uids -- ' + str(data['message']) )
 
+	def get_tarql_insert(self, triple_holder, select_clause, shape_clause, where_clause):
+		publication_tarql = ''
+
+		for prefix in self.ingest_prefixes:
+			publication_tarql+=prefix
+
+		# print('publication_tarql', publication_tarql)
+
+		publication_tarql+= ' INSERT {' + shape_clause + '} '
+		publication_tarql+= ' WHERE {'
+		publication_tarql+= where_clause
+		publication_tarql+= ' VALUES (' + select_clause + ') {( %s )}'
+		publication_tarql+='} ; '
+
+		return publication_tarql
+
+	def get_extra_fields(self):
+		extra_fields = ['uid', 'name_space', 'data_type', 'ingest_uid']
+
+		extra_shape_clause = []
+		extra_select_clause = []
+		
+		for extra_field in extra_fields:
+			extra_shape_clause.append(IngestLib.add_normal_field(extra_field, self.ingest_prefix))
+			extra_select_clause.append('?' + extra_field)
+
+		return extra_shape_clause, extra_select_clause
+
+	def insert_csv_data(self, values, name_space, ingest_triple, select_clause, shape_clause, where_clause, schema):
+
+
+		current_uid_keys = self.get_id_keys(len(values))
+
+		extra_shape_clause, extra_select_clause = self.get_extra_fields()
+
+		shape_clause+=extra_shape_clause
+		select_clause+=extra_select_clause
+
+		tarql_insert = self.get_tarql_insert(ingest_triple, ' '.join(select_clause),  ' '.join(shape_clause), ' '.join(where_clause))
+
+		query = ''
+
+		index = 0
+		for row in values:
+			unique_key = current_uid_keys[index]
+			insert_values = []
+			for column_name in schema:
+
+				if column_name in row:
+					value = None
+
+					if row[column_name] is not None and "'" in row[column_name]:
+						value = "'" + str(row[column_name].replace("'", "\\'")) + "'"
+					else:
+						value = "'" + str(row[column_name]) + "'"
+
+					insert_values.append(value)
+				else:
+					raise Exception('Could not find column_name ' + str(column_name) + ' in csv file ' + str(name_space))
+
+			insert_values.append("'" + str(unique_key) + "'")
+			insert_values.append("'" + str(name_space) + "'")
+			insert_values.append("'ingest_data'")
+			insert_values.append("'" + str(ingest_triple.attributes['uid']) + "'")
+
+			query_string = tarql_insert % ' '.join(insert_values)
+			# print('unique_key', unique_key)
+
+			# query_string = query_string.replace("SUB_UID", "'" + unique_key + "'")
+			query+= query_string.replace("SUB_UID", "'" + unique_key + "'")
+
+			# print()
+			# print('query_string', query_string)
+			self.run_sparql_update(query)
+
+
+			index+=1
+
+		# print('query insert', query)
+		# self.run_sparql_update(query)
+
+
+		# index = 0
+		# query = ''
+		# for attributes in values:
+		# 	# unique_key = self.get_next_id_key(name_space)
+		# 	unique_key =current_uid_keys[index]
+		# 	attributes[IngestLib.add_prefix(self.ingest_prefix,'data_type')] = 'ingest_data'
+			
+		# 	query+= self.add_or_update_attributes(unique_key, attributes, name_space, fast_query, ingest_triple)
+		# 	index+=1
+
 
 	def insert_data(self, values, name_space, ingest_triple):
 

@@ -77,7 +77,7 @@ class Ingest(object):
 
 		self.insert_file_records(self.storage_directory, self.template)
 		self.insert_data(self.storage_directory, self.template)
-		self.insert_joins(self.storage_directory, self.template)
+		# self.insert_joins(self.storage_directory, self.template)
 
 		#create a file record for each file
 
@@ -131,9 +131,14 @@ class Ingest(object):
 			if data_type == 'data':
 				if file_type == 'csv':
 					print('inserting', file_name)
+					select_clause = file['select_clause']
+					shape_clause = file['shape_clause']
+					where_clause = file['where_clause']
+					schema = file['schema']
 
 					values, name_space = self.get_csv_data(file_path)
-					self.blaze_graph.insert_data(values, name_space, self.ingest_triple)
+					# self.blaze_graph.insert_data(values, name_space, self.ingest_triple)
+					self.blaze_graph.insert_csv_data(values, name_space, self.ingest_triple, select_clause, shape_clause, where_clause, schema)
 
 				else:
 					raise Exception('file_type', str(file_type), ' not supported')
@@ -185,16 +190,20 @@ class Ingest(object):
 		for index, row in df.iterrows():
 			instance = {}
 			for column_name in schema:
+				# column_name = column_name.strip()
 				# print(column_name, '-->', row[column_name])
 
 				# if (isinstance(row[column_name], float) and math.isnan(row[column_name])) or math.isnan(row[column_name]):
 				if row[column_name] is np.nan:
-					instance[IngestLib.add_prefix(self.ingest_prefix, column_name.strip())] = None
-				elif isinstance(row[column_name], float):
-					instance[IngestLib.add_prefix(self.ingest_prefix, column_name)] = row[column_name]
-				else:
-					instance[IngestLib.add_prefix(self.ingest_prefix, column_name)] = row[column_name].encode('utf-8', 'surrogateescape').decode('utf-8', 'replace')
+					# instance[IngestLib.add_prefix(self.ingest_prefix, column_name.strip())] = None
+					instance[column_name.strip()] = None
+				elif isinstance(row[column_name], (float, int)):
 					# instance[IngestLib.add_prefix(self.ingest_prefix, column_name)] = row[column_name]
+					instance[column_name] = row[column_name]
+				else:
+					# instance[IngestLib.add_prefix(self.ingest_prefix, column_name)] = row[column_name].encode('utf-8', 'surrogateescape').decode('utf-8', 'replace')
+					# instance[IngestLib.add_prefix(self.ingest_prefix, column_name)] = row[column_name]
+					instance[column_name] = row[column_name].encode('utf-8', 'surrogateescape').decode('utf-8', 'replace')
 
 
 			values.append(instance)

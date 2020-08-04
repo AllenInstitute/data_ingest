@@ -4,105 +4,170 @@
       "required": true,
       "file_type": "csv",
       "data_type": "data",
-      "file_name": "archive.csv"
+      "file_name": "data_collection.csv",
+      "select_clause": [
+        "?data_collection_reference_id",
+        "?data_collection_title",
+        "?data_collection_short_title",
+        "?data_collection_description",
+        "?categorical_access_control_state",
+        "?categorical_completion_state",
+        "?last_updated_at_date"
+      ],
+      "shape_clause": [
+        "?data_collection a di:Data_collection ;",
+        "di:data_collection_reference_id ?data_collection_reference_id ;",
+        "di:data_collection_title ?data_collection_title ;",
+        "di:data_collection_short_title ?data_collection_short_title ;",
+        "di:data_collection_description ?data_collection_description ;",
+        "di:categorical_access_control_state ?categorical_access_control_state ;",
+        "di:categorical_completion_state ?categorical_completion_state ;",
+        "di:last_updated_at_date ?last_updated_at_date ;"
+      ],
+      "where_clause": [
+        "BIND(IRI(SUB_UID) AS ?data_collection)"
+      ],
+      "schema": [
+        "data_collection_reference_id",
+        "data_collection_title",
+        "data_collection_short_title",
+        "data_collection_description",
+        "categorical_access_control_state",
+        "categorical_completion_state",
+        "last_updated_at_date"
+      ]
     },
     {
       "required": true,
       "file_type": "csv",
       "data_type": "data",
-      "file_name": "investigator.csv"
-    },
-    {
-      "required": true,
-      "file_type": "csv",
-      "data_type": "join",
-      "file_name": "project_archive.csv",
-      "join_name_space_one": "project",
-      "join_name_space_two": "archive"
-    },
-    {
-      "required": true,
-      "file_type": "csv",
-      "data_type": "join",
-      "file_name": "project_investigator.csv",
-      "join_name_space_one": "project",
-      "join_name_space_two": "investigator"
-    },
-    {
-      "required": true,
-      "file_type": "csv",
-      "data_type": "join",
-      "file_name": "project_protocol.csv",
-      "join_name_space_one": "project",
-      "join_name_space_two": "protocol"
-    },
-    {
-      "required": true,
-      "file_type": "csv",
-      "data_type": "join",
-      "file_name": "project_technique.csv",
-      "join_name_space_one": "project",
-      "join_name_space_two": "technique"
+      "file_name": "modality.csv",
+      "select_clause": [
+        "?modality_name"
+      ],
+      "shape_clause": [
+        "?modality a di:Modality ;",
+        "di:modality_name ?modality_name ;"
+      ],
+      "where_clause": [
+        "BIND(IRI(SUB_UID) AS ?modality)"
+      ],
+      "schema": [
+        "modality_name"
+      ]
     },
     {
       "required": true,
       "file_type": "csv",
       "data_type": "data",
-      "file_name": "protocol.csv"
+      "file_name": "organization.csv",
+      "select_clause": [
+        "?organization_reference_id",
+        "?organization_name",
+        "?ror_symbol"
+      ],
+      "shape_clause": [
+        "?organization a di:Organization ;",
+        "di:organization_reference_id ?organization_reference_id ;",
+        "di:organization_name ?organization_name ;",
+        "di:ror_symbol ?ror_symbol ;"
+      ],
+      "where_clause": [
+        "BIND(IRI(SUB_UID) AS ?organization)"
+      ],
+      "schema": [
+        "organization_reference_id",
+        "organization_name",
+        "ror_symbol"
+      ]
     },
     {
       "required": true,
       "file_type": "csv",
       "data_type": "data",
-      "file_name": "technique.csv"
+      "file_name": "person.csv",
+      "select_clause": [
+        "?person_reference_id",
+        "?person_name",
+        "?person_given_name",
+        "?person_family_name",
+        "?orcid_symbol"
+      ],
+      "shape_clause": [
+        "?person a di:Person ;",
+        "di:person_reference_id ?person_reference_id ;",
+        "di:person_name ?person_name ;",
+        "di:person_given_name ?person_given_name ;",
+        "di:person_family_name ?person_family_name ;",
+        "di:orcid_symbol ?orcid_symbol ;"
+      ],
+      "where_clause": [
+        "BIND(IRI(SUB_UID) AS ?person)"
+      ],
+      "schema": [
+        "person_reference_id",
+        "person_name",
+        "person_given_name",
+        "person_family_name",
+        "orcid_symbol"
+      ]
     },
     {
       "required": true,
       "file_type": "csv",
       "data_type": "data",
-      "file_name": "grant.csv"
+      "file_name": "species.csv",
+      "select_clause": [
+        "?species_name"
+      ],
+      "shape_clause": [
+        "?species a di:Species ;",
+        "di:species_name ?species_name ;"
+      ],
+      "where_clause": [
+        "BIND(IRI(SUB_UID) AS ?species)"
+      ],
+      "schema": [
+        "species_name"
+      ]
     },
     {
       "required": true,
       "file_type": "csv",
       "data_type": "data",
-      "file_name": "modality.csv"
-    },
-    {
-      "required": true,
-      "file_type": "csv",
-      "data_type": "join",
-      "file_name": "project_grant.csv",
-      "join_name_space_one": "project",
-      "join_name_space_two": "grant"
-    },
-    {
-      "required": true,
-      "file_type": "csv",
-      "data_type": "join",
-      "file_name": "project_modality.csv",
-      "join_name_space_one": "project",
-      "join_name_space_two": "modality"
-    },
-    {
-      "required": true,
-      "file_type": "csv",
-      "data_type": "join",
-      "file_name": "project_species.csv",
-      "join_name_space_one": "project",
-      "join_name_space_two": "species"
+      "file_name": "specimen_type.csv",
+      "select_clause": [
+        "?specimen_type_name"
+      ],
+      "shape_clause": [
+        "?specimen_type a di:Specimen_type ;",
+        "di:specimen_type_name ?specimen_type_name ;"
+      ],
+      "where_clause": [
+        "BIND(IRI(SUB_UID) AS ?specimen_type)"
+      ],
+      "schema": [
+        "specimen_type_name"
+      ]
     },
     {
       "required": true,
       "file_type": "csv",
       "data_type": "data",
-      "file_name": "project.csv"
-    },
-    {
-      "required": true,
-      "file_type": "csv",
-      "data_type": "data",
-      "file_name": "species.csv"
+      "file_name": "technique.csv",
+      "select_clause": [
+        "?technique_name"
+      ],
+      "shape_clause": [
+        "?technique a di:Technique ;",
+        "di:technique_name ?technique_name ;"
+      ],
+      "where_clause": [
+        "BIND(IRI(SUB_UID) AS ?technique)"
+      ],
+      "schema": [
+        "technique_name"
+      ]
     }
   ]
 }

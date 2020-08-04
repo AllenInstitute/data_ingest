@@ -77,7 +77,7 @@ class IngestLib(object):
 			elif ((in_quote and is_quote) or (in_number and is_digit)) and (next_character is None or next_character == ','):
 				add_item = True
 				# results.append(item)
-				# item = ''
+				# item = ''select_clause
 				# in_quote = False
 				# in_number = False
 				# first_character = True
@@ -117,6 +117,20 @@ class IngestLib(object):
 				hash_md5.update(chunk)
 		return hash_md5.hexdigest()
 
+	@staticmethod
+	def create_data_template_validation(required, file_type, ingest_prefix, file_name, select_clause, shape_clause, where_clause, schema):
+		template_validation = {}
+		template_validation['required'] = required
+		template_validation['file_type'] = file_type
+		template_validation['data_type'] = 'data'
+		template_validation['file_name'] = file_name
+		template_validation['select_clause'] = select_clause
+		template_validation['shape_clause'] = shape_clause
+		template_validation['where_clause'] = where_clause
+		template_validation['schema'] = schema
+
+		return template_validation
+
 	@staticmethod 
 	def create_template_validation(required, file_type, data_type, ingest_prefix, file_name):
 		# schema_with_prefix = []
@@ -137,3 +151,25 @@ class IngestLib(object):
 
 
 		return template_validation
+
+	@staticmethod 
+	def add_normal_field(field_name, ingest_prefix):
+		return IngestLib.add_prefix(ingest_prefix, field_name) + ' ?' + str(field_name) + ' ;';
+
+	@staticmethod 
+	def add_normal_subject( subject, subject_class, ingest_prefix):
+		return '?' + str(subject) + ' a ' + IngestLib.add_prefix(ingest_prefix, str(subject_class)) + ' ;'
+
+	@staticmethod
+	def data_template_helper(subject, schema, ingest_prefix):
+		subject_class = subject.capitalize()
+		select_clause = []
+		shape_clause = [IngestLib.add_normal_subject(subject, subject_class, ingest_prefix)]
+
+		for column in schema:
+			select_clause.append('?' + column)
+			shape_clause.append(IngestLib.add_normal_field(column, ingest_prefix))
+
+		where_clause = ['BIND(IRI(SUB_UID) AS ?' + subject + ')']
+
+		return select_clause, shape_clause, where_clause 
