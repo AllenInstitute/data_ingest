@@ -1,6 +1,7 @@
 {
   "files": [
     {
+      "subject": "data_collection",
       "required": true,
       "file_type": "csv",
       "data_type": "data",
@@ -25,7 +26,7 @@
         "di:last_updated_at_date ?last_updated_at_date ;"
       ],
       "where_clause": [
-        "BIND(IRI(SUB_UID) AS ?data_collection)"
+        "BIND(IRI(SUB_UID) AS ?data_collection) "
       ],
       "schema": [
         "data_collection_reference_id",
@@ -35,9 +36,12 @@
         "categorical_access_control_state",
         "categorical_completion_state",
         "last_updated_at_date"
-      ]
+      ],
+      "joins": {},
+      "extra_joins": {}
     },
     {
+      "subject": "modality",
       "required": true,
       "file_type": "csv",
       "data_type": "data",
@@ -50,13 +54,16 @@
         "di:modality_name ?modality_name ;"
       ],
       "where_clause": [
-        "BIND(IRI(SUB_UID) AS ?modality)"
+        "BIND(IRI(SUB_UID) AS ?modality) "
       ],
       "schema": [
         "modality_name"
-      ]
+      ],
+      "joins": {},
+      "extra_joins": {}
     },
     {
+      "subject": "organization",
       "required": true,
       "file_type": "csv",
       "data_type": "data",
@@ -73,15 +80,18 @@
         "di:ror_symbol ?ror_symbol ;"
       ],
       "where_clause": [
-        "BIND(IRI(SUB_UID) AS ?organization)"
+        "BIND(IRI(SUB_UID) AS ?organization) "
       ],
       "schema": [
         "organization_reference_id",
         "organization_name",
         "ror_symbol"
-      ]
+      ],
+      "joins": {},
+      "extra_joins": {}
     },
     {
+      "subject": "person",
       "required": true,
       "file_type": "csv",
       "data_type": "data",
@@ -102,7 +112,7 @@
         "di:orcid_symbol ?orcid_symbol ;"
       ],
       "where_clause": [
-        "BIND(IRI(SUB_UID) AS ?person)"
+        "BIND(IRI(SUB_UID) AS ?person) "
       ],
       "schema": [
         "person_reference_id",
@@ -110,9 +120,12 @@
         "person_given_name",
         "person_family_name",
         "orcid_symbol"
-      ]
+      ],
+      "joins": {},
+      "extra_joins": {}
     },
     {
+      "subject": "species",
       "required": true,
       "file_type": "csv",
       "data_type": "data",
@@ -125,13 +138,16 @@
         "di:species_name ?species_name ;"
       ],
       "where_clause": [
-        "BIND(IRI(SUB_UID) AS ?species)"
+        "BIND(IRI(SUB_UID) AS ?species) "
       ],
       "schema": [
         "species_name"
-      ]
+      ],
+      "joins": {},
+      "extra_joins": {}
     },
     {
+      "subject": "specimen_type",
       "required": true,
       "file_type": "csv",
       "data_type": "data",
@@ -144,13 +160,16 @@
         "di:specimen_type_name ?specimen_type_name ;"
       ],
       "where_clause": [
-        "BIND(IRI(SUB_UID) AS ?specimen_type)"
+        "BIND(IRI(SUB_UID) AS ?specimen_type) "
       ],
       "schema": [
         "specimen_type_name"
-      ]
+      ],
+      "joins": {},
+      "extra_joins": {}
     },
     {
+      "subject": "technique",
       "required": true,
       "file_type": "csv",
       "data_type": "data",
@@ -163,11 +182,1496 @@
         "di:technique_name ?technique_name ;"
       ],
       "where_clause": [
-        "BIND(IRI(SUB_UID) AS ?technique)"
+        "BIND(IRI(SUB_UID) AS ?technique) "
       ],
       "schema": [
         "technique_name"
-      ]
+      ],
+      "joins": {},
+      "extra_joins": {}
+    },
+    {
+      "subject": "web_resource",
+      "required": true,
+      "file_type": "csv",
+      "data_type": "data",
+      "file_name": "web_resource.csv",
+      "select_clause": [
+        "?web_resource_reference_id",
+        "?web_resource_type",
+        "?web_resource_title",
+        "?web_resource_short_title",
+        "?universal_resource_locator"
+      ],
+      "shape_clause": [
+        "?web_resource a di:Web_resource ;",
+        "di:web_resource_reference_id ?web_resource_reference_id ;",
+        "di:web_resource_type ?web_resource_type ;",
+        "di:web_resource_title ?web_resource_title ;",
+        "di:web_resource_short_title ?web_resource_short_title ;",
+        "di:universal_resource_locator ?universal_resource_locator ;"
+      ],
+      "where_clause": [
+        "BIND(IRI(SUB_UID) AS ?web_resource) "
+      ],
+      "schema": [
+        "web_resource_reference_id",
+        "web_resource_type",
+        "web_resource_title",
+        "web_resource_short_title",
+        "universal_resource_locator"
+      ],
+      "joins": {},
+      "extra_joins": {}
+    },
+    {
+      "subject": "license",
+      "required": true,
+      "file_type": "csv",
+      "data_type": "data",
+      "file_name": "license.csv",
+      "select_clause": [
+        "?license_reference_id",
+        "?license_title",
+        "?license_short_title",
+        "?information_web_resource_reference_id"
+      ],
+      "shape_clause": [
+        "?license a di:License ;",
+        "di:license_reference_id ?license_reference_id ;",
+        "di:license_title ?license_title ;",
+        "di:license_short_title ?license_short_title ;",
+        "di:information_web_resource_reference_id ?information_web_resource_reference_id ;"
+      ],
+      "where_clause": [
+        "BIND(IRI(SUB_UID) AS ?license) "
+      ],
+      "schema": [
+        "license_reference_id",
+        "license_title",
+        "license_short_title",
+        "information_web_resource_reference_id"
+      ],
+      "joins": {
+        "information_web_resource_reference_id": {
+          "reference_table": "web_resource",
+          "predicate": "rdf:has_part",
+          "table_column": "information_web_resource_reference_id",
+          "reference_table_column": "web_resource_reference_id",
+          "column_uid": "information_web_resource_reference_uid"
+        }
+      },
+      "extra_joins": {
+        "information_web_resource_reference_id": {
+          "extra_shape_clause": "rdf:has_part ?information_web_resource_reference_id_match ; ",
+          "extra_where_clause": "BIND('information_web_resource_reference_uid' as ?information_web_resource_reference_id_match)"
+        }
+      }
+    },
+    {
+      "subject": "contact_person_realized_in_data_collection_project",
+      "required": true,
+      "file_type": "csv",
+      "data_type": "data",
+      "file_name": "contact_person_realized_in_data_collection_project.csv",
+      "select_clause": [
+        "?project_reference_id",
+        "?person_reference_id",
+        "?email_address",
+        "?priority_order"
+      ],
+      "shape_clause": [
+        "?contact_person_realized_in_data_collection_project a di:Contact_person_realized_in_data_collection_project ;",
+        "di:project_reference_id ?project_reference_id ;",
+        "di:person_reference_id ?person_reference_id ;",
+        "di:email_address ?email_address ;",
+        "di:priority_order ?priority_order ;"
+      ],
+      "where_clause": [
+        "BIND(IRI(SUB_UID) AS ?contact_person_realized_in_data_collection_project) "
+      ],
+      "schema": [
+        "project_reference_id",
+        "person_reference_id",
+        "email_address",
+        "priority_order"
+      ],
+      "joins": {
+        "project_reference_id": {
+          "reference_table": "project",
+          "predicate": "rdf:has_part",
+          "table_column": "project_reference_id",
+          "reference_table_column": "project_reference_id",
+          "column_uid": "project_reference_uid"
+        },
+        "person_reference_id": {
+          "reference_table": "person",
+          "predicate": "rdf:has_part",
+          "table_column": "person_reference_id",
+          "reference_table_column": "person_reference_id",
+          "column_uid": "person_reference_uid"
+        }
+      },
+      "extra_joins": {
+        "project_reference_id": {
+          "extra_shape_clause": "rdf:has_part ?project_reference_id_match ; ",
+          "extra_where_clause": "BIND('project_reference_uid' as ?project_reference_id_match)"
+        },
+        "person_reference_id": {
+          "extra_shape_clause": "rdf:has_part ?person_reference_id_match ; ",
+          "extra_where_clause": "BIND('person_reference_uid' as ?person_reference_id_match)"
+        }
+      }
+    },
+    {
+      "subject": "grant_is_specified_input_of_data_collection_project",
+      "required": true,
+      "file_type": "csv",
+      "data_type": "data",
+      "file_name": "grant_is_specified_input_of_data_collection_project.csv",
+      "select_clause": [
+        "?project_reference_id",
+        "?grant_reference_id",
+        "?priority_order"
+      ],
+      "shape_clause": [
+        "?grant_is_specified_input_of_data_collection_project a di:Grant_is_specified_input_of_data_collection_project ;",
+        "di:project_reference_id ?project_reference_id ;",
+        "di:grant_reference_id ?grant_reference_id ;",
+        "di:priority_order ?priority_order ;"
+      ],
+      "where_clause": [
+        "BIND(IRI(SUB_UID) AS ?grant_is_specified_input_of_data_collection_project) "
+      ],
+      "schema": [
+        "project_reference_id",
+        "grant_reference_id",
+        "priority_order"
+      ],
+      "joins": {
+        "project_reference_id": {
+          "reference_table": "project",
+          "predicate": "rdf:has_part",
+          "table_column": "project_reference_id",
+          "reference_table_column": "project_reference_id",
+          "column_uid": "project_reference_uid"
+        },
+        "grant_reference_id": {
+          "reference_table": "grant",
+          "predicate": "rdf:has_part",
+          "table_column": "grant_reference_id",
+          "reference_table_column": "grant_reference_id",
+          "column_uid": "grant_reference_uid"
+        }
+      },
+      "extra_joins": {
+        "project_reference_id": {
+          "extra_shape_clause": "rdf:has_part ?project_reference_id_match ; ",
+          "extra_where_clause": "BIND('project_reference_uid' as ?project_reference_id_match)"
+        },
+        "grant_reference_id": {
+          "extra_shape_clause": "rdf:has_part ?grant_reference_id_match ; ",
+          "extra_where_clause": "BIND('grant_reference_uid' as ?grant_reference_id_match)"
+        }
+      }
+    },
+    {
+      "subject": "highlighted_web_resource_is_about_data_collection_project",
+      "required": true,
+      "file_type": "csv",
+      "data_type": "data",
+      "file_name": "highlighted_web_resource_is_about_data_collection_project.csv",
+      "select_clause": [
+        "?project_reference_id",
+        "?web_resource_reference_id",
+        "?priority_order"
+      ],
+      "shape_clause": [
+        "?highlighted_web_resource_is_about_data_collection_project a di:Highlighted_web_resource_is_about_data_collection_project ;",
+        "di:project_reference_id ?project_reference_id ;",
+        "di:web_resource_reference_id ?web_resource_reference_id ;",
+        "di:priority_order ?priority_order ;"
+      ],
+      "where_clause": [
+        "BIND(IRI(SUB_UID) AS ?highlighted_web_resource_is_about_data_collection_project) "
+      ],
+      "schema": [
+        "project_reference_id",
+        "web_resource_reference_id",
+        "priority_order"
+      ],
+      "joins": {
+        "project_reference_id": {
+          "reference_table": "project",
+          "predicate": "rdf:has_part",
+          "table_column": "project_reference_id",
+          "reference_table_column": "project_reference_id",
+          "column_uid": "project_reference_uid"
+        },
+        "web_resource_reference_id": {
+          "reference_table": "web_resource",
+          "predicate": "rdf:has_part",
+          "table_column": "web_resource_reference_id",
+          "reference_table_column": "web_resource_reference_id",
+          "column_uid": "web_resource_reference_uid"
+        }
+      },
+      "extra_joins": {
+        "project_reference_id": {
+          "extra_shape_clause": "rdf:has_part ?project_reference_id_match ; ",
+          "extra_where_clause": "BIND('project_reference_uid' as ?project_reference_id_match)"
+        },
+        "web_resource_reference_id": {
+          "extra_shape_clause": "rdf:has_part ?web_resource_reference_id_match ; ",
+          "extra_where_clause": "BIND('web_resource_reference_uid' as ?web_resource_reference_id_match)"
+        }
+      }
+    },
+    {
+      "subject": "data_collection_is_specified_output_of_data_collection_project",
+      "required": true,
+      "file_type": "csv",
+      "data_type": "data",
+      "file_name": "data_collection_is_specified_output_of_data_collection_project.csv",
+      "select_clause": [
+        "?project_reference_id",
+        "?data_collection_reference_id",
+        "?priority_order"
+      ],
+      "shape_clause": [
+        "?data_collection_is_specified_output_of_data_collection_project a di:Data_collection_is_specified_output_of_data_collection_project ;",
+        "di:project_reference_id ?project_reference_id ;",
+        "di:data_collection_reference_id ?data_collection_reference_id ;",
+        "di:priority_order ?priority_order ;"
+      ],
+      "where_clause": [
+        "BIND(IRI(SUB_UID) AS ?data_collection_is_specified_output_of_data_collection_project) "
+      ],
+      "schema": [
+        "project_reference_id",
+        "data_collection_reference_id",
+        "priority_order"
+      ],
+      "joins": {
+        "project_reference_id": {
+          "reference_table": "project",
+          "predicate": "rdf:has_part",
+          "table_column": "project_reference_id",
+          "reference_table_column": "project_reference_id",
+          "column_uid": "project_reference_uid"
+        },
+        "data_collection_reference_id": {
+          "reference_table": "data_collection",
+          "predicate": "rdf:has_part",
+          "table_column": "data_collection_reference_id",
+          "reference_table_column": "data_collection_reference_id",
+          "column_uid": "data_collection_reference_uid"
+        }
+      },
+      "extra_joins": {
+        "project_reference_id": {
+          "extra_shape_clause": "rdf:has_part ?project_reference_id_match ; ",
+          "extra_where_clause": "BIND('project_reference_uid' as ?project_reference_id_match)"
+        },
+        "data_collection_reference_id": {
+          "extra_shape_clause": "rdf:has_part ?data_collection_reference_id_match ; ",
+          "extra_where_clause": "BIND('data_collection_reference_uid' as ?data_collection_reference_id_match)"
+        }
+      }
+    },
+    {
+      "subject": "data_collection_modality_classification",
+      "required": true,
+      "file_type": "csv",
+      "data_type": "data",
+      "file_name": "data_collection_modality_classification.csv",
+      "select_clause": [
+        "?data_collection_reference_id",
+        "?modality_name"
+      ],
+      "shape_clause": [
+        "?data_collection_modality_classification a di:Data_collection_modality_classification ;",
+        "di:data_collection_reference_id ?data_collection_reference_id ;",
+        "di:modality_name ?modality_name ;"
+      ],
+      "where_clause": [
+        "BIND(IRI(SUB_UID) AS ?data_collection_modality_classification) "
+      ],
+      "schema": [
+        "data_collection_reference_id",
+        "modality_name"
+      ],
+      "joins": {
+        "data_collection_reference_id": {
+          "reference_table": "data_collection",
+          "predicate": "rdf:has_part",
+          "table_column": "data_collection_reference_id",
+          "reference_table_column": "data_collection_reference_id",
+          "column_uid": "data_collection_reference_uid"
+        }
+      },
+      "extra_joins": {
+        "data_collection_reference_id": {
+          "extra_shape_clause": "rdf:has_part ?data_collection_reference_id_match ; ",
+          "extra_where_clause": "BIND('data_collection_reference_uid' as ?data_collection_reference_id_match)"
+        }
+      }
+    },
+    {
+      "subject": "license_is_about_data_collection_project",
+      "required": true,
+      "file_type": "csv",
+      "data_type": "data",
+      "file_name": "license_is_about_data_collection_project.csv",
+      "select_clause": [
+        "?project_reference_id",
+        "?license_reference_id",
+        "?priority_order"
+      ],
+      "shape_clause": [
+        "?license_is_about_data_collection_project a di:License_is_about_data_collection_project ;",
+        "di:project_reference_id ?project_reference_id ;",
+        "di:license_reference_id ?license_reference_id ;",
+        "di:priority_order ?priority_order ;"
+      ],
+      "where_clause": [
+        "BIND(IRI(SUB_UID) AS ?license_is_about_data_collection_project) "
+      ],
+      "schema": [
+        "project_reference_id",
+        "license_reference_id",
+        "priority_order"
+      ],
+      "joins": {
+        "project_reference_id": {
+          "reference_table": "project",
+          "predicate": "rdf:has_part",
+          "table_column": "project_reference_id",
+          "reference_table_column": "project_reference_id",
+          "column_uid": "project_reference_uid"
+        },
+        "license_reference_id": {
+          "reference_table": "license",
+          "predicate": "rdf:has_part",
+          "table_column": "license_reference_id",
+          "reference_table_column": "license_reference_id",
+          "column_uid": "license_reference_uid"
+        }
+      },
+      "extra_joins": {
+        "project_reference_id": {
+          "extra_shape_clause": "rdf:has_part ?project_reference_id_match ; ",
+          "extra_where_clause": "BIND('project_reference_uid' as ?project_reference_id_match)"
+        },
+        "license_reference_id": {
+          "extra_shape_clause": "rdf:has_part ?license_reference_id_match ; ",
+          "extra_where_clause": "BIND('license_reference_uid' as ?license_reference_id_match)"
+        }
+      }
+    },
+    {
+      "subject": "data_collection_project_is_part_of_sub_program",
+      "required": true,
+      "file_type": "csv",
+      "data_type": "data",
+      "file_name": "data_collection_project_is_part_of_sub_program.csv",
+      "select_clause": [
+        "?project_reference_id",
+        "?sub_program_reference_id",
+        "?priority_order"
+      ],
+      "shape_clause": [
+        "?data_collection_project_is_part_of_sub_program a di:Data_collection_project_is_part_of_sub_program ;",
+        "di:project_reference_id ?project_reference_id ;",
+        "di:sub_program_reference_id ?sub_program_reference_id ;",
+        "di:priority_order ?priority_order ;"
+      ],
+      "where_clause": [
+        "BIND(IRI(SUB_UID) AS ?data_collection_project_is_part_of_sub_program) "
+      ],
+      "schema": [
+        "project_reference_id",
+        "sub_program_reference_id",
+        "priority_order"
+      ],
+      "joins": {
+        "project_reference_id": {
+          "reference_table": "project",
+          "predicate": "rdf:has_part",
+          "table_column": "project_reference_id",
+          "reference_table_column": "project_reference_id",
+          "column_uid": "project_reference_uid"
+        },
+        "sub_program_reference_id": {
+          "reference_table": "project",
+          "predicate": "rdf:has_part",
+          "table_column": "sub_program_reference_id",
+          "reference_table_column": "project_reference_id",
+          "column_uid": "sub_program_reference_uid"
+        }
+      },
+      "extra_joins": {
+        "project_reference_id": {
+          "extra_shape_clause": "rdf:has_part ?project_reference_id_match ; ",
+          "extra_where_clause": "BIND('project_reference_uid' as ?project_reference_id_match)"
+        },
+        "sub_program_reference_id": {
+          "extra_shape_clause": "rdf:has_part ?sub_program_reference_id_match ; ",
+          "extra_where_clause": "BIND('sub_program_reference_uid' as ?sub_program_reference_id_match)"
+        }
+      }
+    },
+    {
+      "subject": "data_collection_project_is_related_to_data_collection_project",
+      "required": true,
+      "file_type": "csv",
+      "data_type": "data",
+      "file_name": "data_collection_project_is_related_to_data_collection_project.csv",
+      "select_clause": [
+        "?project_reference_id",
+        "?related_project_reference_id",
+        "?priority_order"
+      ],
+      "shape_clause": [
+        "?data_collection_project_is_related_to_data_collection_project a di:Data_collection_project_is_related_to_data_collection_project ;",
+        "di:project_reference_id ?project_reference_id ;",
+        "di:related_project_reference_id ?related_project_reference_id ;",
+        "di:priority_order ?priority_order ;"
+      ],
+      "where_clause": [
+        "BIND(IRI(SUB_UID) AS ?data_collection_project_is_related_to_data_collection_project) "
+      ],
+      "schema": [
+        "project_reference_id",
+        "related_project_reference_id",
+        "priority_order"
+      ],
+      "joins": {
+        "project_reference_id": {
+          "reference_table": "project",
+          "predicate": "rdf:has_part",
+          "table_column": "project_reference_id",
+          "reference_table_column": "project_reference_id",
+          "column_uid": "project_reference_uid"
+        },
+        "related_project_reference_id": {
+          "reference_table": "project",
+          "predicate": "rdf:has_part",
+          "table_column": "related_project_reference_id",
+          "reference_table_column": "project_reference_id",
+          "column_uid": "related_project_reference_uid"
+        }
+      },
+      "extra_joins": {
+        "project_reference_id": {
+          "extra_shape_clause": "rdf:has_part ?project_reference_id_match ; ",
+          "extra_where_clause": "BIND('project_reference_uid' as ?project_reference_id_match)"
+        },
+        "related_project_reference_id": {
+          "extra_shape_clause": "rdf:has_part ?related_project_reference_id_match ; ",
+          "extra_where_clause": "BIND('related_project_reference_uid' as ?related_project_reference_id_match)"
+        }
+      }
+    },
+    {
+      "subject": "data_collection_project_modality_classification",
+      "required": true,
+      "file_type": "csv",
+      "data_type": "data",
+      "file_name": "data_collection_project_modality_classification.csv",
+      "select_clause": [
+        "?project_reference_id",
+        "?modality_name"
+      ],
+      "shape_clause": [
+        "?data_collection_project_modality_classification a di:Data_collection_project_modality_classification ;",
+        "di:project_reference_id ?project_reference_id ;",
+        "di:modality_name ?modality_name ;"
+      ],
+      "where_clause": [
+        "BIND(IRI(SUB_UID) AS ?data_collection_project_modality_classification) "
+      ],
+      "schema": [
+        "project_reference_id",
+        "modality_name"
+      ],
+      "joins": {
+        "project_reference_id": {
+          "reference_table": "project",
+          "predicate": "rdf:has_part",
+          "table_column": "project_reference_id",
+          "reference_table_column": "project_reference_id",
+          "column_uid": "project_reference_uid"
+        }
+      },
+      "extra_joins": {
+        "project_reference_id": {
+          "extra_shape_clause": "rdf:has_part ?project_reference_id_match ; ",
+          "extra_where_clause": "BIND('project_reference_uid' as ?project_reference_id_match)"
+        }
+      }
+    },
+    {
+      "subject": "data_collection_project_species_classification",
+      "required": true,
+      "file_type": "csv",
+      "data_type": "data",
+      "file_name": "data_collection_project_species_classification.csv",
+      "select_clause": [
+        "?project_reference_id",
+        "?species_name"
+      ],
+      "shape_clause": [
+        "?data_collection_project_species_classification a di:Data_collection_project_species_classification ;",
+        "di:project_reference_id ?project_reference_id ;",
+        "di:species_name ?species_name ;"
+      ],
+      "where_clause": [
+        "BIND(IRI(SUB_UID) AS ?data_collection_project_species_classification) "
+      ],
+      "schema": [
+        "project_reference_id",
+        "species_name"
+      ],
+      "joins": {
+        "project_reference_id": {
+          "reference_table": "project",
+          "predicate": "rdf:has_part",
+          "table_column": "project_reference_id",
+          "reference_table_column": "project_reference_id",
+          "column_uid": "project_reference_uid"
+        }
+      },
+      "extra_joins": {
+        "project_reference_id": {
+          "extra_shape_clause": "rdf:has_part ?project_reference_id_match ; ",
+          "extra_where_clause": "BIND('project_reference_uid' as ?project_reference_id_match)"
+        }
+      }
+    },
+    {
+      "subject": "project",
+      "required": true,
+      "file_type": "csv",
+      "data_type": "data",
+      "file_name": "project.csv",
+      "select_clause": [
+        "?project_reference_id",
+        "?project_title",
+        "?project_short_title",
+        "?project_description",
+        "?project_type",
+        "?doi_symbol",
+        "?project_citation",
+        "?information_web_resource_reference_id"
+      ],
+      "shape_clause": [
+        "?project a di:Project ;",
+        "di:project_reference_id ?project_reference_id ;",
+        "di:project_title ?project_title ;",
+        "di:project_short_title ?project_short_title ;",
+        "di:project_description ?project_description ;",
+        "di:project_type ?project_type ;",
+        "di:doi_symbol ?doi_symbol ;",
+        "di:project_citation ?project_citation ;",
+        "di:information_web_resource_reference_id ?information_web_resource_reference_id ;"
+      ],
+      "where_clause": [
+        "BIND(IRI(SUB_UID) AS ?project) "
+      ],
+      "schema": [
+        "project_reference_id",
+        "project_title",
+        "project_short_title",
+        "project_description",
+        "project_type",
+        "doi_symbol",
+        "project_citation",
+        "information_web_resource_reference_id"
+      ],
+      "joins": {
+        "information_web_resource_reference_id": {
+          "reference_table": "web_resource",
+          "predicate": "rdf:has_part",
+          "table_column": "information_web_resource_reference_id",
+          "reference_table_column": "web_resource_reference_id",
+          "column_uid": "web_resource_reference_uid"
+        }
+      },
+      "extra_joins": {
+        "information_web_resource_reference_id": {
+          "extra_shape_clause": "rdf:has_part ?information_web_resource_reference_id_match ; ",
+          "extra_where_clause": "BIND('web_resource_reference_uid' as ?information_web_resource_reference_id_match)"
+        }
+      }
+    },
+    {
+      "subject": "data_collection_project_specimen_type_classification",
+      "required": true,
+      "file_type": "csv",
+      "data_type": "data",
+      "file_name": "data_collection_project_specimen_type_classification.csv",
+      "select_clause": [
+        "?project_reference_id",
+        "?specimen_type_name"
+      ],
+      "shape_clause": [
+        "?data_collection_project_specimen_type_classification a di:Data_collection_project_specimen_type_classification ;",
+        "di:project_reference_id ?project_reference_id ;",
+        "di:specimen_type_name ?specimen_type_name ;"
+      ],
+      "where_clause": [
+        "BIND(IRI(SUB_UID) AS ?data_collection_project_specimen_type_classification) "
+      ],
+      "schema": [
+        "project_reference_id",
+        "specimen_type_name"
+      ],
+      "joins": {
+        "project_reference_id": {
+          "reference_table": "project",
+          "predicate": "rdf:has_part",
+          "table_column": "project_reference_id",
+          "reference_table_column": "project_reference_id",
+          "column_uid": "project_reference_uid"
+        }
+      },
+      "extra_joins": {
+        "project_reference_id": {
+          "extra_shape_clause": "rdf:has_part ?project_reference_id_match ; ",
+          "extra_where_clause": "BIND('project_reference_uid' as ?project_reference_id_match)"
+        }
+      }
+    },
+    {
+      "subject": "protocol",
+      "required": true,
+      "file_type": "csv",
+      "data_type": "data",
+      "file_name": "protocol.csv",
+      "select_clause": [
+        "?protocol_reference_id",
+        "?protocol_title",
+        "?protocol_short_title",
+        "?view_web_resource_reference_id"
+      ],
+      "shape_clause": [
+        "?protocol a di:Protocol ;",
+        "di:protocol_reference_id ?protocol_reference_id ;",
+        "di:protocol_title ?protocol_title ;",
+        "di:protocol_short_title ?protocol_short_title ;",
+        "di:view_web_resource_reference_id ?view_web_resource_reference_id ;"
+      ],
+      "where_clause": [
+        "BIND(IRI(SUB_UID) AS ?protocol) "
+      ],
+      "schema": [
+        "protocol_reference_id",
+        "protocol_title",
+        "protocol_short_title",
+        "view_web_resource_reference_id"
+      ],
+      "joins": {
+        "view_web_resource_reference_id": {
+          "reference_table": "web_resource",
+          "predicate": "rdf:has_part",
+          "table_column": "view_web_resource_reference_id",
+          "reference_table_column": "web_resource_reference_id",
+          "column_uid": "web_resource_reference_uid"
+        }
+      },
+      "extra_joins": {
+        "view_web_resource_reference_id": {
+          "extra_shape_clause": "rdf:has_part ?view_web_resource_reference_id_match ; ",
+          "extra_where_clause": "BIND('web_resource_reference_uid' as ?view_web_resource_reference_id_match)"
+        }
+      }
+    },
+    {
+      "subject": "data_collection_project_technique_classification",
+      "required": true,
+      "file_type": "csv",
+      "data_type": "data",
+      "file_name": "data_collection_project_technique_classification.csv",
+      "select_clause": [
+        "?project_reference_id",
+        "?technique_name"
+      ],
+      "shape_clause": [
+        "?data_collection_project_technique_classification a di:Data_collection_project_technique_classification ;",
+        "di:project_reference_id ?project_reference_id ;",
+        "di:technique_name ?technique_name ;"
+      ],
+      "where_clause": [
+        "BIND(IRI(SUB_UID) AS ?data_collection_project_technique_classification) "
+      ],
+      "schema": [
+        "project_reference_id",
+        "technique_name"
+      ],
+      "joins": {
+        "project_reference_id": {
+          "reference_table": "project",
+          "predicate": "rdf:has_part",
+          "table_column": "project_reference_id",
+          "reference_table_column": "project_reference_id",
+          "column_uid": "project_reference_uid"
+        }
+      },
+      "extra_joins": {
+        "project_reference_id": {
+          "extra_shape_clause": "rdf:has_part ?project_reference_id_match ; ",
+          "extra_where_clause": "BIND('project_reference_uid' as ?project_reference_id_match)"
+        }
+      }
+    },
+    {
+      "subject": "protocol_is_about_data_collection_project",
+      "required": true,
+      "file_type": "csv",
+      "data_type": "data",
+      "file_name": "protocol_is_about_data_collection_project.csv",
+      "select_clause": [
+        "?project_reference_id",
+        "?protocol_reference_id",
+        "?priority_order"
+      ],
+      "shape_clause": [
+        "?protocol_is_about_data_collection_project a di:Protocol_is_about_data_collection_project ;",
+        "di:project_reference_id ?project_reference_id ;",
+        "di:protocol_reference_id ?protocol_reference_id ;",
+        "di:priority_order ?priority_order ;"
+      ],
+      "where_clause": [
+        "BIND(IRI(SUB_UID) AS ?protocol_is_about_data_collection_project) "
+      ],
+      "schema": [
+        "project_reference_id",
+        "protocol_reference_id",
+        "priority_order"
+      ],
+      "joins": {
+        "project_reference_id": {
+          "reference_table": "project",
+          "predicate": "rdf:has_part",
+          "table_column": "project_reference_id",
+          "reference_table_column": "project_reference_id",
+          "column_uid": "project_reference_uid"
+        },
+        "protocol_reference_id": {
+          "reference_table": "protocol",
+          "predicate": "rdf:has_part",
+          "table_column": "protocol_reference_id",
+          "reference_table_column": "protocol_reference_id",
+          "column_uid": "protocol_reference_uid"
+        }
+      },
+      "extra_joins": {
+        "project_reference_id": {
+          "extra_shape_clause": "rdf:has_part ?project_reference_id_match ; ",
+          "extra_where_clause": "BIND('project_reference_uid' as ?project_reference_id_match)"
+        },
+        "protocol_reference_id": {
+          "extra_shape_clause": "rdf:has_part ?protocol_reference_id_match ; ",
+          "extra_where_clause": "BIND('protocol_reference_uid' as ?protocol_reference_id_match)"
+        }
+      }
+    },
+    {
+      "subject": "data_collection_reported_specimen_count",
+      "required": true,
+      "file_type": "csv",
+      "data_type": "data",
+      "file_name": "data_collection_reported_specimen_count.csv",
+      "select_clause": [
+        "?data_collection_reference_id",
+        "?specimen_type_name",
+        "?reported_count"
+      ],
+      "shape_clause": [
+        "?data_collection_reported_specimen_count a di:Data_collection_reported_specimen_count ;",
+        "di:data_collection_reference_id ?data_collection_reference_id ;",
+        "di:specimen_type_name ?specimen_type_name ;",
+        "di:reported_count ?reported_count ;"
+      ],
+      "where_clause": [
+        "BIND(IRI(SUB_UID) AS ?data_collection_reported_specimen_count) "
+      ],
+      "schema": [
+        "data_collection_reference_id",
+        "specimen_type_name",
+        "reported_count"
+      ],
+      "joins": {
+        "data_collection_reference_id": {
+          "reference_table": "data_collection",
+          "predicate": "rdf:has_part",
+          "table_column": "data_collection_reference_id",
+          "reference_table_column": "data_collection_reference_id",
+          "column_uid": "data_collection_reference_uid"
+        }
+      },
+      "extra_joins": {
+        "data_collection_reference_id": {
+          "extra_shape_clause": "rdf:has_part ?data_collection_reference_id_match ; ",
+          "extra_where_clause": "BIND('data_collection_reference_uid' as ?data_collection_reference_id_match)"
+        }
+      }
+    },
+    {
+      "subject": "publication",
+      "required": true,
+      "file_type": "csv",
+      "data_type": "data",
+      "file_name": "publication.csv",
+      "select_clause": [
+        "?publication_reference_id",
+        "?publication_title",
+        "?publication_year",
+        "?first_author_reference_id",
+        "?doi_symbol",
+        "?pubmed_id"
+      ],
+      "shape_clause": [
+        "?publication a di:Publication ;",
+        "di:publication_reference_id ?publication_reference_id ;",
+        "di:publication_title ?publication_title ;",
+        "di:publication_year ?publication_year ;",
+        "di:first_author_reference_id ?first_author_reference_id ;",
+        "di:doi_symbol ?doi_symbol ;",
+        "di:pubmed_id ?pubmed_id ;"
+      ],
+      "where_clause": [
+        "BIND(IRI(SUB_UID) AS ?publication) "
+      ],
+      "schema": [
+        "publication_reference_id",
+        "publication_title",
+        "publication_year",
+        "first_author_reference_id",
+        "doi_symbol",
+        "pubmed_id"
+      ],
+      "joins": {
+        "first_author_reference_id": {
+          "reference_table": "person",
+          "predicate": "rdf:has_part",
+          "table_column": "first_author_reference_id",
+          "reference_table_column": "person_reference_id",
+          "column_uid": "person_reference_uid"
+        }
+      },
+      "extra_joins": {
+        "first_author_reference_id": {
+          "extra_shape_clause": "rdf:has_part ?first_author_reference_id_match ; ",
+          "extra_where_clause": "BIND('person_reference_uid' as ?first_author_reference_id_match)"
+        }
+      }
+    },
+    {
+      "subject": "data_collection_species_classification",
+      "required": true,
+      "file_type": "csv",
+      "data_type": "data",
+      "file_name": "data_collection_species_classification.csv",
+      "select_clause": [
+        "?data_collection_reference_id",
+        "?species_name"
+      ],
+      "shape_clause": [
+        "?data_collection_species_classification a di:Data_collection_species_classification ;",
+        "di:data_collection_reference_id ?data_collection_reference_id ;",
+        "di:species_name ?species_name ;"
+      ],
+      "where_clause": [
+        "BIND(IRI(SUB_UID) AS ?data_collection_species_classification) "
+      ],
+      "schema": [
+        "data_collection_reference_id",
+        "species_name"
+      ],
+      "joins": {
+        "data_collection_reference_id": {
+          "reference_table": "data_collection",
+          "predicate": "rdf:has_part",
+          "table_column": "data_collection_reference_id",
+          "reference_table_column": "data_collection_reference_id",
+          "column_uid": "data_collection_reference_uid"
+        }
+      },
+      "extra_joins": {
+        "data_collection_reference_id": {
+          "extra_shape_clause": "rdf:has_part ?data_collection_reference_id_match ; ",
+          "extra_where_clause": "BIND('data_collection_reference_uid' as ?data_collection_reference_id_match)"
+        }
+      }
+    },
+    {
+      "subject": "publication_is_about_data_collection",
+      "required": true,
+      "file_type": "csv",
+      "data_type": "data",
+      "file_name": "publication_is_about_data_collection.csv",
+      "select_clause": [
+        "?data_collection_reference_id",
+        "?publication_reference_id",
+        "?priority_order"
+      ],
+      "shape_clause": [
+        "?publication_is_about_data_collection a di:Publication_is_about_data_collection ;",
+        "di:data_collection_reference_id ?data_collection_reference_id ;",
+        "di:publication_reference_id ?publication_reference_id ;",
+        "di:priority_order ?priority_order ;"
+      ],
+      "where_clause": [
+        "BIND(IRI(SUB_UID) AS ?publication_is_about_data_collection) "
+      ],
+      "schema": [
+        "data_collection_reference_id",
+        "publication_reference_id",
+        "priority_order"
+      ],
+      "joins": {
+        "data_collection_reference_id": {
+          "reference_table": "data_collection",
+          "predicate": "rdf:has_part",
+          "table_column": "data_collection_reference_id",
+          "reference_table_column": "data_collection_reference_id",
+          "column_uid": "data_collection_reference_uid"
+        },
+        "publication_reference_id": {
+          "reference_table": "publication",
+          "predicate": "rdf:has_part",
+          "table_column": "publication_reference_id",
+          "reference_table_column": "publication_reference_id",
+          "column_uid": "publication_reference_uid"
+        }
+      },
+      "extra_joins": {
+        "data_collection_reference_id": {
+          "extra_shape_clause": "rdf:has_part ?data_collection_reference_id_match ; ",
+          "extra_where_clause": "BIND('data_collection_reference_uid' as ?data_collection_reference_id_match)"
+        },
+        "publication_reference_id": {
+          "extra_shape_clause": "rdf:has_part ?publication_reference_id_match ; ",
+          "extra_where_clause": "BIND('publication_reference_uid' as ?publication_reference_id_match)"
+        }
+      }
+    },
+    {
+      "subject": "data_collection_specimen_type_classification",
+      "required": true,
+      "file_type": "csv",
+      "data_type": "data",
+      "file_name": "data_collection_specimen_type_classification.csv",
+      "select_clause": [
+        "?data_collection_reference_id",
+        "?specimen_type_name"
+      ],
+      "shape_clause": [
+        "?data_collection_specimen_type_classification a di:Data_collection_specimen_type_classification ;",
+        "di:data_collection_reference_id ?data_collection_reference_id ;",
+        "di:specimen_type_name ?specimen_type_name ;"
+      ],
+      "where_clause": [
+        "BIND(IRI(SUB_UID) AS ?data_collection_specimen_type_classification) "
+      ],
+      "schema": [
+        "data_collection_reference_id",
+        "specimen_type_name"
+      ],
+      "joins": {
+        "data_collection_reference_id": {
+          "reference_table": "data_collection",
+          "predicate": "rdf:has_part",
+          "table_column": "data_collection_reference_id",
+          "reference_table_column": "data_collection_reference_id",
+          "column_uid": "data_collection_reference_uid"
+        }
+      },
+      "extra_joins": {
+        "data_collection_reference_id": {
+          "extra_shape_clause": "rdf:has_part ?data_collection_reference_id_match ; ",
+          "extra_where_clause": "BIND('data_collection_reference_uid' as ?data_collection_reference_id_match)"
+        }
+      }
+    },
+    {
+      "subject": "publication_is_about_data_collection_project",
+      "required": true,
+      "file_type": "csv",
+      "data_type": "data",
+      "file_name": "publication_is_about_data_collection_project.csv",
+      "select_clause": [
+        "?project_reference_id",
+        "?publication_reference_id",
+        "?priority_order"
+      ],
+      "shape_clause": [
+        "?publication_is_about_data_collection_project a di:Publication_is_about_data_collection_project ;",
+        "di:project_reference_id ?project_reference_id ;",
+        "di:publication_reference_id ?publication_reference_id ;",
+        "di:priority_order ?priority_order ;"
+      ],
+      "where_clause": [
+        "BIND(IRI(SUB_UID) AS ?publication_is_about_data_collection_project) "
+      ],
+      "schema": [
+        "project_reference_id",
+        "publication_reference_id",
+        "priority_order"
+      ],
+      "joins": {
+        "project_reference_id": {
+          "reference_table": "project",
+          "predicate": "rdf:has_part",
+          "table_column": "project_reference_id",
+          "reference_table_column": "project_reference_id",
+          "column_uid": "project_reference_uid"
+        },
+        "publication_reference_id": {
+          "reference_table": "publication",
+          "predicate": "rdf:has_part",
+          "table_column": "publication_reference_id",
+          "reference_table_column": "publication_reference_id",
+          "column_uid": "publication_reference_uid"
+        }
+      },
+      "extra_joins": {
+        "project_reference_id": {
+          "extra_shape_clause": "rdf:has_part ?project_reference_id_match ; ",
+          "extra_where_clause": "BIND('project_reference_uid' as ?project_reference_id_match)"
+        },
+        "publication_reference_id": {
+          "extra_shape_clause": "rdf:has_part ?publication_reference_id_match ; ",
+          "extra_where_clause": "BIND('publication_reference_uid' as ?publication_reference_id_match)"
+        }
+      }
+    },
+    {
+      "subject": "data_collection_technique_classification",
+      "required": true,
+      "file_type": "csv",
+      "data_type": "data",
+      "file_name": "data_collection_technique_classification.csv",
+      "select_clause": [
+        "?data_collection_reference_id",
+        "?technique_name"
+      ],
+      "shape_clause": [
+        "?data_collection_technique_classification a di:Data_collection_technique_classification ;",
+        "di:data_collection_reference_id ?data_collection_reference_id ;",
+        "di:technique_name ?technique_name ;"
+      ],
+      "where_clause": [
+        "BIND(IRI(SUB_UID) AS ?data_collection_technique_classification) "
+      ],
+      "schema": [
+        "data_collection_reference_id",
+        "technique_name"
+      ],
+      "joins": {
+        "data_collection_reference_id": {
+          "reference_table": "data_collection",
+          "predicate": "rdf:has_part",
+          "table_column": "data_collection_reference_id",
+          "reference_table_column": "data_collection_reference_id",
+          "column_uid": "data_collection_reference_uid"
+        }
+      },
+      "extra_joins": {
+        "data_collection_reference_id": {
+          "extra_shape_clause": "rdf:has_part ?data_collection_reference_id_match ; ",
+          "extra_where_clause": "BIND('data_collection_reference_uid' as ?data_collection_reference_id_match)"
+        }
+      }
+    },
+    {
+      "subject": "data_contributor_realized_in_data_collection_project",
+      "required": true,
+      "file_type": "csv",
+      "data_type": "data",
+      "file_name": "data_contributor_realized_in_data_collection_project.csv",
+      "select_clause": [
+        "?project_reference_id",
+        "?person_reference_id",
+        "?organization_reference_id",
+        "?agent_type",
+        "?priority_order"
+      ],
+      "shape_clause": [
+        "?data_contributor_realized_in_data_collection_project a di:Data_contributor_realized_in_data_collection_project ;",
+        "di:project_reference_id ?project_reference_id ;",
+        "di:person_reference_id ?person_reference_id ;",
+        "di:organization_reference_id ?organization_reference_id ;",
+        "di:agent_type ?agent_type ;",
+        "di:priority_order ?priority_order ;"
+      ],
+      "where_clause": [
+        "BIND(IRI(SUB_UID) AS ?data_contributor_realized_in_data_collection_project) "
+      ],
+      "schema": [
+        "project_reference_id",
+        "person_reference_id",
+        "organization_reference_id",
+        "agent_type",
+        "priority_order"
+      ],
+      "joins": {
+        "project_reference_id": {
+          "reference_table": "project",
+          "predicate": "rdf:has_part",
+          "table_column": "project_reference_id",
+          "reference_table_column": "project_reference_id",
+          "column_uid": "project_reference_uid"
+        },
+        "person_reference_id": {
+          "reference_table": "person",
+          "predicate": "rdf:has_part",
+          "table_column": "person_reference_id",
+          "reference_table_column": "person_reference_id",
+          "column_uid": "person_reference_uid"
+        },
+        "organization_reference_id": {
+          "reference_table": "organization",
+          "predicate": "rdf:has_part",
+          "table_column": "organization_reference_id",
+          "reference_table_column": "organization_reference_id",
+          "column_uid": "organization_reference_uid"
+        }
+      },
+      "extra_joins": {
+        "project_reference_id": {
+          "extra_shape_clause": "rdf:has_part ?project_reference_id_match ; ",
+          "extra_where_clause": "BIND('project_reference_uid' as ?project_reference_id_match)"
+        },
+        "person_reference_id": {
+          "extra_shape_clause": "rdf:has_part ?person_reference_id_match ; ",
+          "extra_where_clause": "BIND('person_reference_uid' as ?person_reference_id_match)"
+        },
+        "organization_reference_id": {
+          "extra_shape_clause": "rdf:has_part ?organization_reference_id_match ; ",
+          "extra_where_clause": "BIND('organization_reference_uid' as ?organization_reference_id_match)"
+        }
+      }
+    },
+    {
+      "subject": "data_creator_realized_in_data_collection_project",
+      "required": true,
+      "file_type": "csv",
+      "data_type": "data",
+      "file_name": "data_creator_realized_in_data_collection_project.csv",
+      "select_clause": [
+        "?project_reference_id",
+        "?person_reference_id",
+        "?organization_reference_id",
+        "?agent_type",
+        "?priority_order"
+      ],
+      "shape_clause": [
+        "?data_creator_realized_in_data_collection_project a di:Data_creator_realized_in_data_collection_project ;",
+        "di:project_reference_id ?project_reference_id ;",
+        "di:person_reference_id ?person_reference_id ;",
+        "di:organization_reference_id ?organization_reference_id ;",
+        "di:agent_type ?agent_type ;",
+        "di:priority_order ?priority_order ;"
+      ],
+      "where_clause": [
+        "BIND(IRI(SUB_UID) AS ?data_creator_realized_in_data_collection_project) "
+      ],
+      "schema": [
+        "project_reference_id",
+        "person_reference_id",
+        "organization_reference_id",
+        "agent_type",
+        "priority_order"
+      ],
+      "joins": {
+        "project_reference_id": {
+          "reference_table": "project",
+          "predicate": "rdf:has_part",
+          "table_column": "project_reference_id",
+          "reference_table_column": "project_reference_id",
+          "column_uid": "project_reference_uid"
+        },
+        "person_reference_id": {
+          "reference_table": "person",
+          "predicate": "rdf:has_part",
+          "table_column": "person_reference_id",
+          "reference_table_column": "person_reference_id",
+          "column_uid": "person_reference_uid"
+        },
+        "organization_reference_id": {
+          "reference_table": "organization",
+          "predicate": "rdf:has_part",
+          "table_column": "organization_reference_id",
+          "reference_table_column": "organization_reference_id",
+          "column_uid": "organization_reference_uid"
+        }
+      },
+      "extra_joins": {
+        "project_reference_id": {
+          "extra_shape_clause": "rdf:has_part ?project_reference_id_match ; ",
+          "extra_where_clause": "BIND('project_reference_uid' as ?project_reference_id_match)"
+        },
+        "person_reference_id": {
+          "extra_shape_clause": "rdf:has_part ?person_reference_id_match ; ",
+          "extra_where_clause": "BIND('person_reference_uid' as ?person_reference_id_match)"
+        },
+        "organization_reference_id": {
+          "extra_shape_clause": "rdf:has_part ?organization_reference_id_match ; ",
+          "extra_where_clause": "BIND('organization_reference_uid' as ?organization_reference_id_match)"
+        }
+      }
+    },
+    {
+      "subject": "sub_program_is_part_of_program",
+      "required": true,
+      "file_type": "csv",
+      "data_type": "data",
+      "file_name": "sub_program_is_part_of_program.csv",
+      "select_clause": [
+        "?sub_program_reference_id",
+        "?program_reference_id"
+      ],
+      "shape_clause": [
+        "?sub_program_is_part_of_program a di:Sub_program_is_part_of_program ;",
+        "di:sub_program_reference_id ?sub_program_reference_id ;",
+        "di:program_reference_id ?program_reference_id ;"
+      ],
+      "where_clause": [
+        "BIND(IRI(SUB_UID) AS ?sub_program_is_part_of_program) "
+      ],
+      "schema": [
+        "sub_program_reference_id",
+        "program_reference_id"
+      ],
+      "joins": {
+        "sub_program_reference_id": {
+          "reference_table": "project",
+          "predicate": "rdf:has_part",
+          "table_column": "sub_program_reference_id",
+          "reference_table_column": "project_reference_id",
+          "column_uid": "sub_program_reference_uid"
+        },
+        "program_reference_id": {
+          "reference_table": "project",
+          "predicate": "rdf:has_part",
+          "table_column": "program_reference_id",
+          "reference_table_column": "project_reference_id",
+          "column_uid": "program_reference_uid"
+        }
+      },
+      "extra_joins": {
+        "sub_program_reference_id": {
+          "extra_shape_clause": "rdf:has_part ?sub_program_reference_id_match ; ",
+          "extra_where_clause": "BIND('sub_program_reference_uid' as ?sub_program_reference_id_match)"
+        },
+        "program_reference_id": {
+          "extra_shape_clause": "rdf:has_part ?program_reference_id_match ; ",
+          "extra_where_clause": "BIND('program_reference_uid' as ?program_reference_id_match)"
+        }
+      }
+    },
+    {
+      "subject": "data_publication_year_is_about_data_collection_project",
+      "required": true,
+      "file_type": "csv",
+      "data_type": "data",
+      "file_name": "data_publication_year_is_about_data_collection_project.csv",
+      "select_clause": [
+        "?project_reference_id",
+        "?data_publication_year"
+      ],
+      "shape_clause": [
+        "?data_publication_year_is_about_data_collection_project a di:Data_publication_year_is_about_data_collection_project ;",
+        "di:project_reference_id ?project_reference_id ;",
+        "di:data_publication_year ?data_publication_year ;"
+      ],
+      "where_clause": [
+        "BIND(IRI(SUB_UID) AS ?data_publication_year_is_about_data_collection_project) "
+      ],
+      "schema": [
+        "project_reference_id",
+        "data_publication_year"
+      ],
+      "joins": {
+        "project_reference_id": {
+          "reference_table": "project",
+          "predicate": "rdf:has_part",
+          "table_column": "project_reference_id",
+          "reference_table_column": "project_reference_id",
+          "column_uid": "project_reference_uid"
+        }
+      },
+      "extra_joins": {
+        "project_reference_id": {
+          "extra_shape_clause": "rdf:has_part ?project_reference_id_match ; ",
+          "extra_where_clause": "BIND('project_reference_uid' as ?project_reference_id_match)"
+        }
+      }
+    },
+    {
+      "subject": "data_publisher_realized_in_data_collection_project",
+      "required": true,
+      "file_type": "csv",
+      "data_type": "data",
+      "file_name": "data_publisher_realized_in_data_collection_project.csv",
+      "select_clause": [
+        "?project_reference_id",
+        "?organization_reference_id"
+      ],
+      "shape_clause": [
+        "?data_publisher_realized_in_data_collection_project a di:Data_publisher_realized_in_data_collection_project ;",
+        "di:project_reference_id ?project_reference_id ;",
+        "di:organization_reference_id ?organization_reference_id ;"
+      ],
+      "where_clause": [
+        "BIND(IRI(SUB_UID) AS ?data_publisher_realized_in_data_collection_project) "
+      ],
+      "schema": [
+        "project_reference_id",
+        "organization_reference_id"
+      ],
+      "joins": {
+        "project_reference_id": {
+          "reference_table": "project",
+          "predicate": "rdf:has_part",
+          "table_column": "project_reference_id",
+          "reference_table_column": "project_reference_id",
+          "column_uid": "project_reference_uid"
+        },
+        "organization_reference_id": {
+          "reference_table": "organization",
+          "predicate": "rdf:has_part",
+          "table_column": "organization_reference_id",
+          "reference_table_column": "organization_reference_id",
+          "column_uid": "organization_reference_uid"
+        }
+      },
+      "extra_joins": {
+        "project_reference_id": {
+          "extra_shape_clause": "rdf:has_part ?project_reference_id_match ; ",
+          "extra_where_clause": "BIND('project_reference_uid' as ?project_reference_id_match)"
+        },
+        "organization_reference_id": {
+          "extra_shape_clause": "rdf:has_part ?organization_reference_id_match ; ",
+          "extra_where_clause": "BIND('organization_reference_uid' as ?organization_reference_id_match)"
+        }
+      }
+    },
+    {
+      "subject": "grant",
+      "required": true,
+      "file_type": "csv",
+      "data_type": "data",
+      "file_name": "grant.csv",
+      "select_clause": [
+        "?grant_reference_id",
+        "?grant_title",
+        "?grant_identifier",
+        "?funding_agency_reference_id",
+        "?awardee_reference_id",
+        "?report_symbol"
+      ],
+      "shape_clause": [
+        "?grant a di:Grant ;",
+        "di:grant_reference_id ?grant_reference_id ;",
+        "di:grant_title ?grant_title ;",
+        "di:grant_identifier ?grant_identifier ;",
+        "di:funding_agency_reference_id ?funding_agency_reference_id ;",
+        "di:awardee_reference_id ?awardee_reference_id ;",
+        "di:report_symbol ?report_symbol ;"
+      ],
+      "where_clause": [
+        "BIND(IRI(SUB_UID) AS ?grant) "
+      ],
+      "schema": [
+        "grant_reference_id",
+        "grant_title",
+        "grant_identifier",
+        "funding_agency_reference_id",
+        "awardee_reference_id",
+        "report_symbol"
+      ],
+      "joins": {
+        "awardee_reference_id": {
+          "reference_table": "organization",
+          "predicate": "rdf:has_part",
+          "table_column": "awardee_reference_id",
+          "reference_table_column": "organization_reference_id",
+          "column_uid": "awardee_reference_uid"
+        },
+        "funding_agency_reference_id": {
+          "reference_table": "organization",
+          "predicate": "rdf:has_part",
+          "table_column": "funding_agency_reference_id",
+          "reference_table_column": "organization_reference_id",
+          "column_uid": "funding_agency_reference_uid"
+        }
+      },
+      "extra_joins": {
+        "awardee_reference_id": {
+          "extra_shape_clause": "rdf:has_part ?awardee_reference_id_match ; ",
+          "extra_where_clause": "BIND('awardee_reference_uid' as ?awardee_reference_id_match)"
+        },
+        "funding_agency_reference_id": {
+          "extra_shape_clause": "rdf:has_part ?funding_agency_reference_id_match ; ",
+          "extra_where_clause": "BIND('funding_agency_reference_uid' as ?funding_agency_reference_id_match)"
+        }
+      }
+    },
+    {
+      "subject": "web_resource_is_about_data_collection",
+      "required": true,
+      "file_type": "csv",
+      "data_type": "data",
+      "file_name": "web_resource_is_about_data_collection.csv",
+      "select_clause": [
+        "?data_collection_reference_id",
+        "?web_resource_reference_id",
+        "?priority_order"
+      ],
+      "shape_clause": [
+        "?web_resource_is_about_data_collection a di:Web_resource_is_about_data_collection ;",
+        "di:data_collection_reference_id ?data_collection_reference_id ;",
+        "di:web_resource_reference_id ?web_resource_reference_id ;",
+        "di:priority_order ?priority_order ;"
+      ],
+      "where_clause": [
+        "BIND(IRI(SUB_UID) AS ?web_resource_is_about_data_collection) "
+      ],
+      "schema": [
+        "data_collection_reference_id",
+        "web_resource_reference_id",
+        "priority_order"
+      ],
+      "joins": {
+        "data_collection_reference_id": {
+          "reference_table": "data_collection",
+          "predicate": "rdf:has_part",
+          "table_column": "data_collection_reference_id",
+          "reference_table_column": "data_collection_reference_id",
+          "column_uid": "data_collection_reference_uid"
+        },
+        "web_resource_reference_id": {
+          "reference_table": "web_resource",
+          "predicate": "rdf:has_part",
+          "table_column": "web_resource_reference_id",
+          "reference_table_column": "web_resource_reference_id",
+          "column_uid": "web_resource_reference_uid"
+        }
+      },
+      "extra_joins": {
+        "data_collection_reference_id": {
+          "extra_shape_clause": "rdf:has_part ?data_collection_reference_id_match ; ",
+          "extra_where_clause": "BIND('data_collection_reference_uid' as ?data_collection_reference_id_match)"
+        },
+        "web_resource_reference_id": {
+          "extra_shape_clause": "rdf:has_part ?web_resource_reference_id_match ; ",
+          "extra_where_clause": "BIND('web_resource_reference_uid' as ?web_resource_reference_id_match)"
+        }
+      }
     }
   ]
 }

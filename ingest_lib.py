@@ -118,8 +118,9 @@ class IngestLib(object):
 		return hash_md5.hexdigest()
 
 	@staticmethod
-	def create_data_template_validation(required, file_type, ingest_prefix, file_name, select_clause, shape_clause, where_clause, schema):
+	def create_data_template_validation(subject, required, file_type, ingest_prefix, file_name, select_clause, shape_clause, where_clause, schema, joins, extra_joins):
 		template_validation = {}
+		template_validation['subject'] = subject
 		template_validation['required'] = required
 		template_validation['file_type'] = file_type
 		template_validation['data_type'] = 'data'
@@ -128,6 +129,8 @@ class IngestLib(object):
 		template_validation['shape_clause'] = shape_clause
 		template_validation['where_clause'] = where_clause
 		template_validation['schema'] = schema
+		template_validation['joins'] = joins
+		template_validation['extra_joins'] = extra_joins
 
 		return template_validation
 
@@ -161,7 +164,7 @@ class IngestLib(object):
 		return '?' + str(subject) + ' a ' + IngestLib.add_prefix(ingest_prefix, str(subject_class)) + ' ;'
 
 	@staticmethod
-	def data_template_helper(subject, schema, ingest_prefix):
+	def data_template_helper(subject, schema, ingest_prefix, joins):
 		subject_class = subject.capitalize()
 		select_clause = []
 		shape_clause = [IngestLib.add_normal_subject(subject, subject_class, ingest_prefix)]
@@ -170,6 +173,15 @@ class IngestLib(object):
 			select_clause.append('?' + column)
 			shape_clause.append(IngestLib.add_normal_field(column, ingest_prefix))
 
-		where_clause = ['BIND(IRI(SUB_UID) AS ?' + subject + ')']
+		where_clause = ['BIND(IRI(SUB_UID) AS ?' + subject + ') ']
 
-		return select_clause, shape_clause, where_clause 
+		extra_joins = {}
+
+		for join in list(joins.keys()):
+			extra = {}
+			extra['extra_shape_clause'] = joins[join]['predicate'] + ' ?' + joins[join]['table_column'] + '_match ; '
+			extra['extra_where_clause'] = "BIND('" + joins[join]['column_uid'] + "' as ?" + joins[join]['table_column'] + '_match)'
+
+			extra_joins[join] = extra
+			
+		return select_clause, shape_clause, where_clause, extra_joins

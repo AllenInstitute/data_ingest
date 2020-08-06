@@ -1,5 +1,6 @@
 from validation import *
 from ingest_lib import *
+from csv_ingest import *
 import zipfile
 import shutil
 import glob
@@ -8,6 +9,7 @@ from datetime import datetime
 import pandas as pd
 import math
 import numpy as np
+import traceback
 
 SETTINGS_FOLDER = './settings'
 SETTINGS_FILE = 'settings.json'
@@ -43,7 +45,8 @@ class Ingest(object):
 			self.blaze_graph.finalize_uids()
 
 		except Exception as e:
-			print(e)
+			print('Error!',e)
+			traceback.print_exc()
 			self.blaze_graph.set_ingest_state(ingest_uid, 'upload failed')
 			self.blaze_graph.delete_uids()
 
@@ -120,28 +123,87 @@ class Ingest(object):
 
 		files = template_data['files']
 
+		file_ingests = []
+
+
 		for file in files:
-			required = file['required']
 			file_type = file['file_type']
-			data_type = file['data_type']
-			file_name = file['file_name']
 
-			file_path = os.path.join(storage_directory, file_name)
+			
+			if file_type == 'csv':
 
-			if data_type == 'data':
-				if file_type == 'csv':
-					print('inserting', file_name)
-					select_clause = file['select_clause']
-					shape_clause = file['shape_clause']
-					where_clause = file['where_clause']
-					schema = file['schema']
+				file_ingests.append(CsvIngest(file['subject'], file['required'], file['file_type'], file['data_type'], file['file_name'], file['select_clause'], file['shape_clause'], file['where_clause'], file['schema'], file['joins'], file['extra_joins']))
+			else:
+				raise Exception('file_type', str(file_type), ' not supported')
+
+
+		prev_ingests = {}
+
+		
+		not_finished = True
+
+		while not_finished:
+			temp_file_ingests = []
+			current_len = len(file_ingests)
+
+			while file_ingests:
+				file_ingest = file_ingests.pop()
+
+				if file_ingest.meets_dependencies(prev_ingests):
+					print('inserting', file_ingest.file_name)
+
+					file_path = os.path.join(storage_directory, file_ingest.file_name)
 
 					values, name_space = self.get_csv_data(file_path)
+					
+					# print('name_space', name_space)
 					# self.blaze_graph.insert_data(values, name_space, self.ingest_triple)
-					self.blaze_graph.insert_csv_data(values, name_space, self.ingest_triple, select_clause, shape_clause, where_clause, schema)
+					self.blaze_graph.insert_csv_data(values, name_space, self.ingest_triple, file_ingest)
 
+					prev_ingests[file_ingest.subject] =  True
 				else:
-					raise Exception('file_type', str(file_type), ' not supported')
+					temp_file_ingests.append(file_ingest)
+
+			for file_ingest in temp_file_ingests:
+				file_ingests.append(file_ingest)
+
+			if current_len == len(file_ingests):
+				file_names = []
+				missing_dependencies = {}
+				for file_ingest in file_ingests:
+					file_names.append(file_ingest.file_name)
+
+					missing_dependencies = file_ingest.get_missing_dependencies(missing_dependencies, prev_ingests)
+
+				raise Exception('Error, could not resolve dependencies for ' + ' '.join(file_names) + ' --- missing dependencies: ' + str(list(missing_dependencies.keys())))
+			elif len(file_ingests) == 0:
+				not_finished = False
+
+
+
+
+		# for file in files:
+		# 	required = file['required']
+		# 	file_type = file['file_type']
+		# 	data_type = file['data_type']
+		# 	file_name = file['file_name']
+
+		# 	file_path = os.path.join(storage_directory, file_name)
+
+		# 	if data_type == 'data':
+		# 		if file_type == 'csv':
+		# 			print('inserting', file_name)
+		# 			select_clause = file['select_clause']
+		# 			shape_clause = file['shape_clause']
+		# 			where_clause = file['where_clause']
+		# 			schema = file['schema']
+
+		# 			values, name_space = self.get_csv_data(file_path)
+		# 			# self.blaze_graph.insert_data(values, name_space, self.ingest_triple)
+		# 			self.blaze_graph.insert_csv_data(values, name_space, self.ingest_triple, select_clause, shape_clause, where_clause, schema)
+
+		# 		else:
+		# 			raise Exception('file_type', str(file_type), ' not supported')
 
 	def insert_joins(self, storage_directory, template):
 		template_data = IngestLib.get_json_data_from_file(template)

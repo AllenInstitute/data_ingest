@@ -53,6 +53,37 @@ class BlazeGraph(object):
 
 		self.run_sparql_update(query)
 
+	def get_subject_by_namespace_and_column(self, namespace, column_name, id_value):
+		query = ''
+
+		for prefix in self.ingest_prefixes:
+			query+=prefix
+
+		query+= ' '
+		query+= 'SELECT ?subject '
+		query+= 'WHERE {' 
+		query+= ' ?subject ' + IngestLib.add_prefix(self.ingest_prefix, 'name_space') + ' "' + str(namespace) + '" . '
+		query+= ' ?subject ' + IngestLib.add_prefix(self.ingest_prefix, column_name) + ' "' + str(id_value) + '" . '
+		query+= ' }'
+
+		# print('query', query)
+
+		query_results = self.run_sparql_query(query)
+
+		bindings = query_results['results']['bindings']
+
+		subject = None
+
+		if len(bindings) > SINGLE_RESULT:
+			raise Exception('Expected query to return a single result but it did not ' + str(query))
+		elif len(bindings) == SINGLE_RESULT:
+			subject = bindings[INDEX_TO_FIRST]['subject']['value']
+
+		if subject is None:
+			print('query', query)
+
+		return subject
+
 	def get_file_record_uids(self, subject):
 		query = ''
 
@@ -864,22 +895,39 @@ class BlazeGraph(object):
 
 		return extra_shape_clause, extra_select_clause
 
-	def insert_csv_data(self, values, name_space, ingest_triple, select_clause, shape_clause, where_clause, schema):
-
-
+	def insert_csv_data(self, values, name_space, ingest_triple, file_ingest):
+		schema = file_ingest.schema
 		current_uid_keys = self.get_id_keys(len(values))
-
 		extra_shape_clause, extra_select_clause = self.get_extra_fields()
-
-		shape_clause+=extra_shape_clause
-		select_clause+=extra_select_clause
-
-		tarql_insert = self.get_tarql_insert(ingest_triple, ' '.join(select_clause),  ' '.join(shape_clause), ' '.join(where_clause))
 
 		query = ''
 
 		index = 0
 		for row in values:
+
+			shape_clause = file_ingest.shape_clause.copy()
+			where_clause = file_ingest.where_clause.copy()
+			select_clause = file_ingest.select_clause.copy()
+
+			shape_clause+=extra_shape_clause
+			select_clause+=extra_select_clause
+
+			# print('file_ingest.joins', file_ingest.joins)
+
+			# print('\nbefore shape_clause', shape_clause)
+
+			for join in list(file_ingest.joins.keys()):
+				column_name = file_ingest.get_join_table_column(join)
+
+				if row[column_name] is not None:
+					extra_joins = file_ingest.extra_joins
+
+
+					shape_clause.append(extra_joins[join]['extra_shape_clause'])
+					where_clause.append(extra_joins[join]['extra_where_clause'])
+
+			tarql_insert = self.get_tarql_insert(ingest_triple, ' '.join(select_clause),  ' '.join(shape_clause), ' '.join(where_clause))
+
 			unique_key = current_uid_keys[index]
 			insert_values = []
 			for column_name in schema:
@@ -887,7 +935,7 @@ class BlazeGraph(object):
 				if column_name in row:
 					value = None
 
-					if row[column_name] is not None and "'" in row[column_name]:
+					if row[column_name] is not None and isinstance(row[column_name], str) and "'" in row[column_name]:
 						value = "'" + str(row[column_name].replace("'", "\\'")) + "'"
 					else:
 						value = "'" + str(row[column_name]) + "'"
@@ -904,30 +952,39 @@ class BlazeGraph(object):
 			query_string = tarql_insert % ' '.join(insert_values)
 			# print('unique_key', unique_key)
 
-			# query_string = query_string.replace("SUB_UID", "'" + unique_key + "'")
-			query+= query_string.replace("SUB_UID", "'" + unique_key + "'")
+			# query = query_string.replace("SUB_UID", "'" + unique_key + "'")
+			query_string = query_string.replace("SUB_UID", "'" + unique_key + "'")
 
-			# print()
-			# print('query_string', query_string)
-			self.run_sparql_update(query)
+			for join in list(file_ingest.joins.keys()):
+				reference_table = file_ingest.get_join_reference_table(join)
+				reference_table_column = file_ingest.get_join_reference_table_column(join)
+				column_uid = file_ingest.get_join_column_uid(join)
+				column_name = file_ingest.get_join_table_column(join)
+
+				if column_name not in row:
+					raise Exception('Could not find column_name ' + str(column_name) + ' in csv file ' + str(name_space))
+
+				if row[column_name] is not None:
+
+					subject = self.get_subject_by_namespace_and_column(reference_table, reference_table_column, row[column_name])
+
+					if subject is None:
+						raise Exception('Expecting an id of ' + str(row[column_name]) + ' to exist in ' + str(reference_table) + ' with predicate ' + str(reference_table_column) + ' but it did not')
+
+					# print('subject', subject)
+					query_string = query_string.replace(column_uid, subject)
+
+
+			query+= query_string
+
+			# print('\n\nquery_string', query_string)
+			# self.run_sparql_update(query_string)
 
 
 			index+=1
 
 		# print('query insert', query)
-		# self.run_sparql_update(query)
-
-
-		# index = 0
-		# query = ''
-		# for attributes in values:
-		# 	# unique_key = self.get_next_id_key(name_space)
-		# 	unique_key =current_uid_keys[index]
-		# 	attributes[IngestLib.add_prefix(self.ingest_prefix,'data_type')] = 'ingest_data'
-			
-		# 	query+= self.add_or_update_attributes(unique_key, attributes, name_space, fast_query, ingest_triple)
-		# 	index+=1
-
+		self.run_sparql_update(query)
 
 	def insert_data(self, values, name_space, ingest_triple):
 
