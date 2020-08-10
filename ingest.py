@@ -67,13 +67,17 @@ class Ingest(object):
 
 				for file in glob.glob(unzipped_file_path + '/*'):
 					correct_location = os.path.join(self.storage_directory, os.path.basename(file))
+					
 					shutil.copyfile(file,  correct_location)
 					os.remove(file)
 
 				os.rmdir(unzipped_file_path)
 
 	def store_data(self):
-		self.validation.validate_file_existance(self.storage_directory, self.template)
+		errors = self.validation.validate_files(self.storage_directory, self.template)
+
+		if len(errors) > 0:
+			raise Exception('Error', errors)
 
 		#remove all results from a previous run...
 		self.blaze_graph.delete_all_data_by_ingest(self.ingest_triple.get_uid())
@@ -112,7 +116,6 @@ class Ingest(object):
 
 			instance['rdf:has_part'] = self.ingest_triple.raw_subject
 
-
 			values.append(instance)
 
 
@@ -129,10 +132,9 @@ class Ingest(object):
 		for file in files:
 			file_type = file['file_type']
 
-			
 			if file_type == 'csv':
 
-				file_ingests.append(CsvIngest(file['subject'], file['required'], file['file_type'], file['data_type'], file['file_name'], file['select_clause'], file['shape_clause'], file['where_clause'], file['schema'], file['joins'], file['extra_joins']))
+				file_ingests.append(CsvIngest(file['subject'], file['required'], file['file_type'], file['data_type'], file['file_name'], file['select_clause'], file['shape_clause'], file['where_clause'], file['schema'], file['joins'], file['extra_joins'], file['primary_key']))
 			else:
 				raise Exception('file_type', str(file_type), ' not supported')
 

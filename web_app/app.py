@@ -52,6 +52,7 @@ def ingests():
 def name_spaces():
 
 	name_spaces = blaze_graph.find_distinct_objects_by_predicate(settings['ingest_prefix'], 'name_space')
+	name_spaces.sort()
 
 	results_length = len(name_spaces)
 	number_label = get_results_label(results_length)

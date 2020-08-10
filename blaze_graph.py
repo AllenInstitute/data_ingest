@@ -728,6 +728,58 @@ class BlazeGraph(object):
 
 		return Triple(subject, IngestLib.add_prefix(self.ingest_prefix, 'uid'), object_value)
 
+	def find_uid_by_object_and_namespace(self, predicate, object_value, name_space):
+		query = ''
+		for prefix in self.ingest_prefixes:
+			query+=prefix
+
+		query+= 'SELECT ?object '
+		query+= 'WHERE {' 
+		query+= '?s ' + IngestLib.add_prefix(self.ingest_prefix, 'name_space') + " '" + str(name_space) + "' . "
+		query+= '?s ' + IngestLib.add_prefix(self.ingest_prefix, predicate) + " '" + str(object_value) + "' . "
+		query+= '?s ' + IngestLib.add_prefix(self.ingest_prefix, 'uid') + ' ?object . '
+		query+= '}'
+
+		# print('query', query)
+
+		query_results = self.run_sparql_query(query)
+
+		bindings = query_results['results']['bindings']
+
+		uid = None
+
+		if len(bindings) != SINGLE_RESULT:
+			raise Exception('Expected query to return a single result but it did not ' + str(query))
+		else:
+			uid = bindings[INDEX_TO_FIRST]['object']['value']
+
+		return uid
+
+	def find_uid_by_subject(self, subject):
+		query = ''
+		for prefix in self.ingest_prefixes:
+			query+=prefix
+
+		query+= 'SELECT ?object '
+		query+= 'WHERE {' 
+		query+= '<'+ subject + '> ' + IngestLib.add_prefix(self.ingest_prefix, 'uid') + ' ?object'
+		query+= '}'
+
+		# print('query', query)
+
+		query_results = self.run_sparql_query(query)
+
+		bindings = query_results['results']['bindings']
+
+		uid = None
+
+		if len(bindings) != SINGLE_RESULT:
+			raise Exception('Expected query to return a single result but it did not ' + str(query))
+		else:
+			uid = bindings[INDEX_TO_FIRST]['object']['value']
+
+		return uid
+
 	def insert_join(self, first_triple, second_triple):
 		query = ''
 
@@ -985,6 +1037,80 @@ class BlazeGraph(object):
 
 		# print('query insert', query)
 		self.run_sparql_update(query)
+
+	def get_export_data(self, file_ingest):
+		query = ''
+		for prefix in self.ingest_prefixes:
+			query+=prefix
+
+		select_clause = file_ingest.select_clause
+		shape_clause = file_ingest.shape_clause
+
+		# print('before', shape_clause)
+
+		for index in range(len(select_clause)):
+			if file_ingest.matches_join(select_clause[index]):
+				resolved = IngestLib.remove_prefix(file_ingest.joins[select_clause[index][1:]]['predicate'])
+
+				# print('replace', select_clause[index][1:])
+				# print('the', shape_clause[index + 1])
+				shape_clause[index + 1] = shape_clause[index + 1].replace(select_clause[index][1:], resolved)
+				select_clause[index] = '?' + resolved
+
+		# print('after', shape_clause)
+
+		query+= ' SELECT DISTINCT ' + ' '.join(select_clause)
+		query+= ' WHERE {' 
+		query+= ' '.join(shape_clause)
+		query+= '}'
+
+		# print('\n\nquery', query)
+
+		query_results = self.run_sparql_query(query)
+
+		bindings = query_results['results']['bindings']
+		# print('bindings', bindings)
+		# print('************')
+		results = []
+		header_row = []
+		first_time = True
+
+		for binding in list(bindings):
+			# print('****dddddd********')
+			row = []
+			for key in list(binding.keys()):
+				stored_value = ''
+
+				if file_ingest.is_resolved(key):
+					value = self.find_uid_by_subject(binding[key]['value'])
+				elif file_ingest.primary_key == key:
+					# print('primary_key', key)
+					# value = binding[key]['value']
+					# print('file_name', file_ingest.subject)
+					value = self.find_uid_by_object_and_namespace(key, binding[key]['value'], file_ingest.subject)
+					# print('value', value)
+				else:
+					value = binding[key]['value']
+
+				if value is not None and value != 'None':
+					stored_value = value
+
+				row.append(stored_value)
+
+				if first_time:
+					if key in file_ingest.resolved_mapping:
+						header_row.append(file_ingest.resolved_mapping[key])
+					else:
+						header_row.append(key)
+					
+
+			if first_time:
+				first_time = False
+
+			results.append(row)
+
+		return header_row, results
+
 
 	def insert_data(self, values, name_space, ingest_triple):
 

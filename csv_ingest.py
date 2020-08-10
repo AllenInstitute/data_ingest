@@ -1,7 +1,7 @@
-
+from ingest_lib import *
 
 class CsvIngest(object):
-	def __init__(self, subject, required, file_type, data_type, file_name, select_clause, shape_clause, where_clause, schema, joins, extra_joins):
+	def __init__(self, subject, required, file_type, data_type, file_name, select_clause, shape_clause, where_clause, schema, joins, extra_joins, primary_key):
 		self.subject = subject
 		self.required = required
 		self.file_type = file_type
@@ -13,11 +13,24 @@ class CsvIngest(object):
 		self.schema = schema
 		self.joins = joins
 		self.extra_joins = extra_joins
+		self.primary_key = primary_key
 
 		self.dependencies = []
+		self.resolved = {}
+		self.resolved_mapping = {}
 
 		for join in list(self.joins.keys()):
 			self.dependencies.append(self.joins[join]['reference_table'])
+
+			resolve = IngestLib.remove_prefix(self.joins[join]['predicate'])
+			self.resolved[resolve] = True
+			self.resolved_mapping[resolve] = join	
+
+	def is_resolved(self, key):
+		return key in self.resolved
+
+	def matches_join(self, key):
+		return key[1:] in self.joins
 
 	def get_missing_dependencies(self, missing_dependencies, prev_ingests):
 		for dependency in self.dependencies:

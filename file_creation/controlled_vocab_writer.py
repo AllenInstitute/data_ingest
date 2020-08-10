@@ -57,15 +57,24 @@ class ControlledVocabWriter(object):
 		name_space = INGESTS_NAMESPACE
 
 		ingestion_instance_one = {}
-		ingestion_instance_one['di:name'] = 'project inventory metadata'
-		ingestion_instance_one['di:storage_directory'] = '/scratch/allen/storage_directory/project_inventory'
+		ingestion_instance_one['di:name'] = 'test project inventory metadata'
+		ingestion_instance_one['di:storage_directory'] = '/scratch/allen/storage_directory/test_project_inventory'
 		ingestion_instance_one['di:template'] = '/scratch/allen/data_ingest/templates/project_inventory.json'
 		ingestion_instance_one['di:description'] = 'Project inventory metadata upload'
 		ingestion_instance_one['di:created_at'] = None
 		ingestion_instance_one['di:uploaded_at'] = None
 
+		ingestion_instance_two = {}
+		ingestion_instance_two['di:name'] = 'project inventory metadata'
+		ingestion_instance_two['di:storage_directory'] = '/scratch/allen/storage_directory/project_inventory'
+		ingestion_instance_two['di:template'] = '/scratch/allen/data_ingest/templates/project_inventory.json'
+		ingestion_instance_two['di:description'] = 'test project inventory metadata upload'
+		ingestion_instance_two['di:created_at'] = None
+		ingestion_instance_two['di:uploaded_at'] = None
+
 		ingestion_instance_values = []
 		ingestion_instance_values.append(ingestion_instance_one)
+		ingestion_instance_values.append(ingestion_instance_two)
 
 		ingestion_instances = {}
 		ingestion_instances['name_space'] = name_space

@@ -1,6 +1,9 @@
 import json
 from blaze_graph import *
 from ingest_lib import *
+import pandas as pd
+import numpy as np
+import math
 
 class Validation(object):
 	def __init__(self, settings):
@@ -44,7 +47,148 @@ class Validation(object):
 		if not os.path.exists(file_path):
 			raise Exception('Expected file to exist at ' + str(file_path) + ' but it does not')
 
+	def validate_files(self, storage_directory, template):
+		errors = []
+		errors+= self.validate_file_existance(storage_directory, template)
+		errors+= self.validate_schema(storage_directory, template)
+		errors+= self.validate_joins(storage_directory, template)
+
+		return errors
+
+	def validate_schema(self, storage_directory, template):
+		errors = []
+
+		template_data = IngestLib.get_json_data_from_file(template)
+
+		files = template_data['files']
+		for file in files:
+			try:
+				required = file['required']
+
+				if required:
+					file_name = file['file_name']
+
+					file_path = os.path.join(storage_directory, file_name)
+					
+					if os.path.exists(file_path):
+						true_schema = (file['schema'])
+
+
+						df = pd.read_csv(file_path, header = 0, encoding='ISO-8859-1')
+						schema = df.columns
+
+						if len(true_schema) != len(schema):
+							raise Exception('schema in file ' + str(file_path) + ' is not the same length as the template schema: ' + str(schema))
+
+						for index in range(len(true_schema)):
+							if true_schema[index] != schema[index]:
+								raise Exception('column with index ' + str(index) + ' in file ' + str(file_path) + ' is not the same length as in the template schema: ' + str(true_schema[index]) + ' != ' + str(schema[index]))
+
+			except Exception as e:
+				errors.append(str(e))
+
+		return errors
+
+	def validate_joins(self, storage_directory, template):
+		errors = []
+
+		template_data = IngestLib.get_json_data_from_file(template)
+
+		#todo validate this?
+		files = template_data['files']
+
+		tables = {}
+		table_primary_keys = {}
+
+		for file in files:
+			try:
+				required = file['required']
+				primary_key = file['primary_key']
+
+				if required and primary_key is not None:
+					file_name = file['file_name']
+					subject = file['subject']
+
+					file_path = os.path.join(storage_directory, file_name)
+					
+					if os.path.exists(file_path):
+						primary_keys = {}
+
+						df = pd.read_csv(file_path, header = 0, encoding='ISO-8859-1')
+
+						for index, row in df.iterrows():
+							primary_keys[row[primary_key]] = True
+	
+						tables[subject] = primary_keys
+						table_primary_keys[subject] = primary_key
+				
+			except Exception as e:
+				errors.append(str(e))
+
+		for file in files:
+			try:
+				required = file['required']
+				primary_key = file['primary_key']
+
+				if required and primary_key is None:
+					file_name = file['file_name']
+					subject = file['subject']
+					joins = file['joins']
+
+					file_path = os.path.join(storage_directory, file_name)
+					
+					if os.path.exists(file_path):
+						primary_keys = {}
+
+						df = pd.read_csv(file_path, header = 0, encoding='ISO-8859-1')
+						schema = df.columns
+
+						for join in list(joins.keys()):
+							table_column = joins[join]['table_column']
+
+							if table_column not in schema:
+								raise Exception('Expected column named ' + str(table_column) + ' to be in ' + str(file_path))
+
+						for index, row in df.iterrows():
+
+							try:
+								for join in list(joins.keys()):
+
+									reference_table = joins[join]['reference_table']
+									reference_table_column = joins[join]['reference_table_column']
+									table_column = joins[join]['table_column']
+
+									value = row[table_column]
+
+									if value is None or value is np.nan or (isinstance(value, (int, float)) and math.isnan(value)):
+										pass
+
+									else:
+
+										if table_column not in row:
+											raise Exception('Expected column named ' + str(table_column) + ' to be in ' + str(file_path))
+
+										elif reference_table not in tables or reference_table not in table_primary_keys:
+											raise Exception('Expected a table named ' + str(reference_table) + ' to exist but it did not')
+
+										elif table_primary_keys[reference_table] != reference_table_column:
+											raise Exception('Expected table named ' + str(reference_table) + ' to have a primary key of ' + str(reference_table) + ' but it did not')
+
+										elif value not in tables[reference_table]:
+											raise Exception('Expected primary key of ' + str(value) + ' to be in table ' + str(reference_table) + ' but it was not for file ' + str(file_path))
+
+
+							except Exception as e:
+								errors.append(str(e)) 
+				
+			except Exception as e:
+				errors.append(str(e))
+
+		return errors
+
 	def validate_file_existance(self, storage_directory, template):
+		errors = []
+
 		template_data = IngestLib.get_json_data_from_file(template)
 
 		#todo validate this?
@@ -60,7 +204,13 @@ class Validation(object):
 
 
 				file_path = os.path.join(storage_directory, file_name)
-				self.validate_file_exists(file_path)
+				try:
+					self.validate_file_exists(file_path)
+				except Exception as e:
+					errors.append(str(e))
+
+		return errors
+
 
 	@staticmethod
 	def validate_controlled_vacab_json(json_file):

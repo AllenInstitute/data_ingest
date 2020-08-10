@@ -11,7 +11,7 @@ def main():
 	settings_file = os.path.join(SETTINGS_FOLDER, SETTINGS_FILE)
 	settings = IngestLib.get_json_data_from_file(settings_file)
 
-	zip_file = '/scratch/allen/metadata/idk_inventory.zip'
+	zip_file = '/scratch/allen/metadata/data_inventory_test_data_20200727.zip'
 	template = '/scratch/allen/data_ingest/templates/project_inventory.json'
 
 	print('writing template', template)
@@ -21,7 +21,7 @@ def main():
 	blaze_graph = BlazeGraph(settings)
 
 	uploader_uid = blaze_graph.get_uploader_uid_by_name('Nathan Sjoquist')
-	ingest_uid = blaze_graph.get_ingest_uid_by_name('project inventory metadata')
+	ingest_uid = blaze_graph.get_ingest_uid_by_name('test project inventory metadata')
 
 	Ingest(uploader_uid, ingest_uid, zip_file)
 

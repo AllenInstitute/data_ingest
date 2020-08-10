@@ -4,6 +4,7 @@ import hashlib
 
 INDEX_TO_FIRST = 0
 INDEX_TO_SECOND = 1
+INDEX_TO_PRIMARY_KEY = 0
 
 class IngestLib(object):
 	@staticmethod
@@ -118,7 +119,7 @@ class IngestLib(object):
 		return hash_md5.hexdigest()
 
 	@staticmethod
-	def create_data_template_validation(subject, required, file_type, ingest_prefix, file_name, select_clause, shape_clause, where_clause, schema, joins, extra_joins):
+	def create_data_template_validation(subject, required, file_type, ingest_prefix, file_name, select_clause, shape_clause, where_clause, schema, joins, extra_joins, use_primary_key):
 		template_validation = {}
 		template_validation['subject'] = subject
 		template_validation['required'] = required
@@ -131,6 +132,11 @@ class IngestLib(object):
 		template_validation['schema'] = schema
 		template_validation['joins'] = joins
 		template_validation['extra_joins'] = extra_joins
+
+		if use_primary_key:
+			template_validation['primary_key'] = schema[INDEX_TO_PRIMARY_KEY]
+		else:
+			template_validation['primary_key'] = None
 
 		return template_validation
 
@@ -160,8 +166,12 @@ class IngestLib(object):
 		return IngestLib.add_prefix(ingest_prefix, field_name) + ' ?' + str(field_name) + ' ;';
 
 	@staticmethod 
-	def add_normal_subject( subject, subject_class, ingest_prefix):
+	def add_normal_subject(subject, subject_class, ingest_prefix):
 		return '?' + str(subject) + ' a ' + IngestLib.add_prefix(ingest_prefix, str(subject_class)) + ' ;'
+
+	@staticmethod
+	def remove_prefix(item):
+		return ':'.join(item.split(':')[1:])
 
 	@staticmethod
 	def data_template_helper(subject, schema, ingest_prefix, joins):
