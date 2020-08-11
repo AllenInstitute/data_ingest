@@ -1,7 +1,7 @@
 from ingest_lib import *
 
 class CsvIngest(object):
-	def __init__(self, subject, required, file_type, data_type, file_name, select_clause, shape_clause, where_clause, schema, joins, extra_joins, primary_key):
+	def __init__(self, subject, required, file_type, data_type, file_name, select_clause, shape_clause, where_clause, schema, joins, extra_joins, primary_key, replace_primary_key, optional_shape):
 		self.subject = subject
 		self.required = required
 		self.file_type = file_type
@@ -14,6 +14,8 @@ class CsvIngest(object):
 		self.joins = joins
 		self.extra_joins = extra_joins
 		self.primary_key = primary_key
+		self.replace_primary_key = replace_primary_key
+		self.optional_shape = optional_shape
 
 		self.dependencies = []
 		self.resolved = {}
@@ -25,6 +27,9 @@ class CsvIngest(object):
 			resolve = IngestLib.remove_prefix(self.joins[join]['predicate'])
 			self.resolved[resolve] = True
 			self.resolved_mapping[resolve] = join	
+			
+	def get_join_length(self):
+		return len(self.joins)
 
 	def is_resolved(self, key):
 		return key in self.resolved

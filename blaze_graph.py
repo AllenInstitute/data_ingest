@@ -8,6 +8,8 @@ from datetime import datetime
 # import urllib
 from urllib.request import urlopen
 import json
+import numpy as np
+import math
 
 INDEX_TO_FIRST = 0
 INDEX_TO_SECOND = 1
@@ -1016,7 +1018,10 @@ class BlazeGraph(object):
 				if column_name not in row:
 					raise Exception('Could not find column_name ' + str(column_name) + ' in csv file ' + str(name_space))
 
-				if row[column_name] is not None:
+				# if row[column_name] is not None and row[column_name] is not np.nan:
+				if row[column_name] is None or row[column_name] is np.nan or (isinstance(row[column_name], (int, float)) and math.isnan(row[column_name])):
+					pass
+				else:
 
 					subject = self.get_subject_by_namespace_and_column(reference_table, reference_table_column, row[column_name])
 
@@ -1045,6 +1050,7 @@ class BlazeGraph(object):
 
 		select_clause = file_ingest.select_clause
 		shape_clause = file_ingest.shape_clause
+		optional_shape = file_ingest.optional_shape
 
 		# print('before', shape_clause)
 
@@ -1060,10 +1066,21 @@ class BlazeGraph(object):
 		# print('after', shape_clause)
 
 		query+= ' SELECT DISTINCT ' + ' '.join(select_clause)
-		query+= ' WHERE {' 
-		query+= ' '.join(shape_clause)
+		query+= ' WHERE {'
+
+		if file_ingest.get_join_length() == 0:
+			query+= ' '.join(shape_clause)
+		else:
+			optional_clause = optional_shape['optional_clause']
+			optional_shape_clause = optional_shape['optional_shape_clause']
+			query+= ' ?' + file_ingest.subject + ' a ' + IngestLib.add_prefix(self.ingest_prefix, file_ingest.subject.capitalize()) + ' ; '
+			query+= ' '.join(optional_shape_clause)
+			query+= ' OPTIONAL { ?' + file_ingest.subject + ' ' + ' '.join(optional_clause) + ' }'
+
+			# print('optional_clause', optional_clause)
 		query+= '}'
 
+		# if file_ingest.subject == 'license':
 		# print('\n\nquery', query)
 
 		query_results = self.run_sparql_query(query)
@@ -1075,33 +1092,57 @@ class BlazeGraph(object):
 		header_row = []
 		first_time = True
 
+		# if file_ingest.subject == 'license':
+		# 	print('file_ingest.schema', file_ingest.schema)
+		# 	print('select_clause', select_clause)
+		
+
 		for binding in list(bindings):
-			# print('****dddddd********')
 			row = []
-			for key in list(binding.keys()):
-				stored_value = ''
 
-				if file_ingest.is_resolved(key):
-					value = self.find_uid_by_subject(binding[key]['value'])
-				elif file_ingest.primary_key == key:
-					# print('primary_key', key)
-					# value = binding[key]['value']
-					# print('file_name', file_ingest.subject)
-					value = self.find_uid_by_object_and_namespace(key, binding[key]['value'], file_ingest.subject)
-					# print('value', value)
+			# if file_ingest.subject == 'license':
+			# 	print('binding.keys()', binding.keys())
+
+			# for key in list(binding.keys()):
+			returned_key = list(binding.keys())
+			for select_key in select_clause:
+				key = IngestLib.remove_first_char(select_key)
+
+				if key in returned_key:
+					stored_value = ''
+					value = ''
+
+					if file_ingest.is_resolved(key):
+						# print('find by uid subject', binding[key]['value'])
+						value = self.find_uid_by_subject(binding[key]['value'])
+					elif file_ingest.replace_primary_key and file_ingest.primary_key == key:
+						# print('primary_key', key)
+						# value = binding[key]['value']
+						# print('file_name', file_ingest.subject, binding[key]['value'].replace("'", "\\'"))
+						# .replace("'", "\\'")) + "'"
+						value = self.find_uid_by_object_and_namespace(key, binding[key]['value'].replace("'", "\\'"), file_ingest.subject)
+						# print('value', value)
+					else:
+						value = binding[key]['value']
+
+					if value is not None and value != 'None':
+						stored_value = value
+
+					if ',' in stored_value:
+						stored_value = '"' + stored_value + '"'
+
+					row.append(stored_value)
+
+
 				else:
-					value = binding[key]['value']
-
-				if value is not None and value != 'None':
-					stored_value = value
-
-				row.append(stored_value)
+					row.append('')
 
 				if first_time:
 					if key in file_ingest.resolved_mapping:
 						header_row.append(file_ingest.resolved_mapping[key])
 					else:
 						header_row.append(key)
+
 					
 
 			if first_time:

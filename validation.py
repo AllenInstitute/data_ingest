@@ -130,56 +130,66 @@ class Validation(object):
 				required = file['required']
 				primary_key = file['primary_key']
 
-				if required and primary_key is None:
+				if required:
 					file_name = file['file_name']
 					subject = file['subject']
 					joins = file['joins']
 
 					file_path = os.path.join(storage_directory, file_name)
-					
-					if os.path.exists(file_path):
-						primary_keys = {}
 
-						df = pd.read_csv(file_path, header = 0, encoding='ISO-8859-1')
-						schema = df.columns
+					# if file_path == '/scratch/allen/storage_directory/project_inventory/data_contributor_realized_in_data_collection_project.csv' or file_path == '/scratch/allen/storage_directory/project_inventory/data_creator_realized_in_data_collection_project.csv':
+					# if file_path == '/scratch/allen/storage_directory/project_inventory/data_contributor_realized_in_data_collection_project.csv':
+						# print('skipping', file_path)
 
-						for join in list(joins.keys()):
-							table_column = joins[join]['table_column']
-
-							if table_column not in schema:
-								raise Exception('Expected column named ' + str(table_column) + ' to be in ' + str(file_path))
-
-						for index, row in df.iterrows():
-
-							try:
-								for join in list(joins.keys()):
-
-									reference_table = joins[join]['reference_table']
-									reference_table_column = joins[join]['reference_table_column']
-									table_column = joins[join]['table_column']
-
-									value = row[table_column]
-
-									if value is None or value is np.nan or (isinstance(value, (int, float)) and math.isnan(value)):
-										pass
-
-									else:
-
-										if table_column not in row:
-											raise Exception('Expected column named ' + str(table_column) + ' to be in ' + str(file_path))
-
-										elif reference_table not in tables or reference_table not in table_primary_keys:
-											raise Exception('Expected a table named ' + str(reference_table) + ' to exist but it did not')
-
-										elif table_primary_keys[reference_table] != reference_table_column:
-											raise Exception('Expected table named ' + str(reference_table) + ' to have a primary key of ' + str(reference_table) + ' but it did not')
-
-										elif value not in tables[reference_table]:
-											raise Exception('Expected primary key of ' + str(value) + ' to be in table ' + str(reference_table) + ' but it was not for file ' + str(file_path))
+					if False:
+						pass
+					else:
+						# print(file_path)
 
 
-							except Exception as e:
-								errors.append(str(e)) 
+						if os.path.exists(file_path):
+							primary_keys = {}
+
+							df = pd.read_csv(file_path, header = 0, encoding='ISO-8859-1')
+							schema = df.columns
+
+							for join in list(joins.keys()):
+								table_column = joins[join]['table_column']
+
+								if table_column not in schema:
+									raise Exception('Expected column named ' + str(table_column) + ' to be in ' + str(file_path))
+
+							for index, row in df.iterrows():
+
+								try:
+									for join in list(joins.keys()):
+
+										reference_table = joins[join]['reference_table']
+										reference_table_column = joins[join]['reference_table_column']
+										table_column = joins[join]['table_column']
+
+										value = row[table_column]
+
+										if value is None or value is np.nan or (isinstance(value, (int, float)) and math.isnan(value)):
+											pass
+
+										else:
+
+											if table_column not in row:
+												raise Exception('Expected column named ' + str(table_column) + ' to be in ' + str(file_path))
+
+											elif reference_table not in tables or reference_table not in table_primary_keys:
+												raise Exception('Expected a table named ' + str(reference_table) + ' to exist but it did not')
+
+											elif table_primary_keys[reference_table] != reference_table_column:
+												raise Exception('Expected table named ' + str(reference_table) + ' to have a primary key of ' + str(reference_table) + ' but it did not')
+
+											elif value not in tables[reference_table]:
+												raise Exception('Expected primary key of ' + str(value) + ' to be in ' + str(reference_table) + ' but it was not for file ' + str(file_path))
+
+
+								except Exception as e:
+									errors.append(str(e)) 
 				
 			except Exception as e:
 				errors.append(str(e))

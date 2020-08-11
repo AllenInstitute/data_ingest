@@ -133,8 +133,7 @@ class Ingest(object):
 			file_type = file['file_type']
 
 			if file_type == 'csv':
-
-				file_ingests.append(CsvIngest(file['subject'], file['required'], file['file_type'], file['data_type'], file['file_name'], file['select_clause'], file['shape_clause'], file['where_clause'], file['schema'], file['joins'], file['extra_joins'], file['primary_key']))
+				file_ingests.append(CsvIngest(file['subject'], file['required'], file['file_type'], file['data_type'], file['file_name'], file['select_clause'], file['shape_clause'], file['where_clause'], file['schema'], file['joins'], file['extra_joins'], file['primary_key'], file['replace_primary_key'], file['optional_shape']))
 			else:
 				raise Exception('file_type', str(file_type), ' not supported')
 
@@ -258,7 +257,7 @@ class Ingest(object):
 				# print(column_name, '-->', row[column_name])
 
 				# if (isinstance(row[column_name], float) and math.isnan(row[column_name])) or math.isnan(row[column_name]):
-				if row[column_name] is np.nan:
+				if row[column_name] is None or row[column_name] is np.nan or (isinstance(row[column_name], (int, float)) and math.isnan(row[column_name])):
 					# instance[IngestLib.add_prefix(self.ingest_prefix, column_name.strip())] = None
 					instance[column_name.strip()] = None
 				elif isinstance(row[column_name], (float, int)):

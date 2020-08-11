@@ -23,7 +23,7 @@ class Export(object):
 		for file in files:
 			file_type = file['file_type']
 			if file_type == 'csv':
-				file_ingests.append(CsvIngest(file['subject'], file['required'], file['file_type'], file['data_type'], file['file_name'], file['select_clause'], file['shape_clause'], file['where_clause'], file['schema'], file['joins'], file['extra_joins'], file['primary_key']))
+				file_ingests.append(CsvIngest(file['subject'], file['required'], file['file_type'], file['data_type'], file['file_name'], file['select_clause'], file['shape_clause'], file['where_clause'], file['schema'], file['joins'], file['extra_joins'], file['primary_key'], file['replace_primary_key'], file['optional_shape']))
 			else:
 				raise Exception('file_type', str(file_type), ' not supported')
 

@@ -119,7 +119,7 @@ class IngestLib(object):
 		return hash_md5.hexdigest()
 
 	@staticmethod
-	def create_data_template_validation(subject, required, file_type, ingest_prefix, file_name, select_clause, shape_clause, where_clause, schema, joins, extra_joins, use_primary_key):
+	def create_data_template_validation(subject, required, file_type, ingest_prefix, file_name, select_clause, shape_clause, where_clause, schema, joins, extra_joins, use_primary_key, replace_primary_key, optional_shape):
 		template_validation = {}
 		template_validation['subject'] = subject
 		template_validation['required'] = required
@@ -132,6 +132,8 @@ class IngestLib(object):
 		template_validation['schema'] = schema
 		template_validation['joins'] = joins
 		template_validation['extra_joins'] = extra_joins
+		template_validation['replace_primary_key'] = replace_primary_key
+		template_validation['optional_shape'] = optional_shape
 
 		if use_primary_key:
 			template_validation['primary_key'] = schema[INDEX_TO_PRIMARY_KEY]
@@ -174,7 +176,11 @@ class IngestLib(object):
 		return ':'.join(item.split(':')[1:])
 
 	@staticmethod
-	def data_template_helper(subject, schema, ingest_prefix, joins):
+	def remove_first_char(item):
+		return item[1:]
+
+	@staticmethod
+	def data_template_helper(subject, schema, ingest_prefix, joins, primary_key):
 		subject_class = subject.capitalize()
 		select_clause = []
 		shape_clause = [IngestLib.add_normal_subject(subject, subject_class, ingest_prefix)]
@@ -186,6 +192,7 @@ class IngestLib(object):
 		where_clause = ['BIND(IRI(SUB_UID) AS ?' + subject + ') ']
 
 		extra_joins = {}
+		optional_shape = None
 
 		for join in list(joins.keys()):
 			extra = {}
@@ -193,5 +200,20 @@ class IngestLib(object):
 			extra['extra_where_clause'] = "BIND('" + joins[join]['column_uid'] + "' as ?" + joins[join]['table_column'] + '_match)'
 
 			extra_joins[join] = extra
+
+		# if primary_key:
+		optional_shape = {}
+		optional_shape_clause = []
+		optional_clause = []
+
+		for column in schema:
+			if column in joins:
+				optional_clause.append(IngestLib.add_normal_field(IngestLib.remove_prefix(joins[column]['predicate']), ingest_prefix))
+			else:
+				optional_shape_clause.append(IngestLib.add_normal_field(column, ingest_prefix))
+
+		optional_shape['optional_clause'] = optional_clause
+		optional_shape['optional_shape_clause'] = optional_shape_clause
+
 			
-		return select_clause, shape_clause, where_clause, extra_joins
+		return select_clause, shape_clause, where_clause, extra_joins, optional_shape
