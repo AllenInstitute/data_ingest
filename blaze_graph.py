@@ -1052,6 +1052,9 @@ class BlazeGraph(object):
 		shape_clause = file_ingest.shape_clause
 		optional_shape = file_ingest.optional_shape
 
+		# if file_ingest.subject == 'data_creator_realized_in_data_collection_project':
+		# 	print('before select_clause', select_clause)
+
 		# print('before', shape_clause)
 
 		for index in range(len(select_clause)):
@@ -1063,9 +1066,12 @@ class BlazeGraph(object):
 				shape_clause[index + 1] = shape_clause[index + 1].replace(select_clause[index][1:], resolved)
 				select_clause[index] = '?' + resolved
 
+		# if file_ingest.subject == 'data_creator_realized_in_data_collection_project':
+		# 	print('after select_clause', select_clause)
+
 		# print('after', shape_clause)
 
-		query+= ' SELECT DISTINCT ' + ' '.join(select_clause)
+		query+= ' SELECT ' + ' '.join(select_clause)
 		query+= ' WHERE {'
 
 		if file_ingest.get_join_length() == 0:
@@ -1075,13 +1081,21 @@ class BlazeGraph(object):
 			optional_shape_clause = optional_shape['optional_shape_clause']
 			query+= ' ?' + file_ingest.subject + ' a ' + IngestLib.add_prefix(self.ingest_prefix, file_ingest.subject.capitalize()) + ' ; '
 			query+= ' '.join(optional_shape_clause)
-			query+= ' OPTIONAL { ?' + file_ingest.subject + ' ' + ' '.join(optional_clause) + ' }'
+			# query+= ' OPTIONAL { ' 
+			# for clause in optional_clause:
+			# 	query+= '?' + file_ingest.subject + ' ' + clause.replace(',', '') + ' . '
+			# query+=' }'
+			for clause in optional_clause:
+				query+= ' OPTIONAL { ?' + file_ingest.subject + ' ' + clause.replace(',', '') + ' . }'
+
+
+			# + file_ingest.subject + ' ' + ' '.join(optional_clause) + ' }'
 
 			# print('optional_clause', optional_clause)
 		query+= '}'
 
-		# if file_ingest.subject == 'license':
-		# print('\n\nquery', query)
+		# if file_ingest.subject == 'data_creator_realized_in_data_collection_project':
+			# print('\n\nquery', query)
 
 		query_results = self.run_sparql_query(query)
 
