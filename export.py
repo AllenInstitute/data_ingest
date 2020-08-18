@@ -42,6 +42,11 @@ class Export(object):
 
 			header_row, csv_lines = self.blaze_graph.get_export_data(file_ingest)
 
+			#if no results
+			if len(header_row) == 0:
+				header_row = file_ingest.schema
+
+
 			with open(export_file, 'w') as out_file:
 				out_file.write(','.join(header_row) + '\n')
 
